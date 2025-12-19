@@ -62,74 +62,79 @@ const Pets = () => {
   const [error, setError] = useState(null);
   const { user } = useAuthContext();
 
-  // useEffect(() => {
-  //   setPetsData(dummyPets);
-  //   setLoading(false);
-  // }, []);
+  useEffect(() => {
+  const fetchPets = async () => {
+    try {
+      setLoading(true);
 
-    useEffect(() => {
-      const fetchPets = async () => {
-        const user = JSON.parse(localStorage.getItem("user"));
+      const user = JSON.parse(localStorage.getItem("user"));
 
-        const res = await fetch(`${import.meta.env.VITE_API_URL}/pets`, {
-          headers: {
-            "Authorization": `Bearer ${user.token}`
-          }
-        });
+      const headers = {};
+      if (user?.token) {
+        headers.Authorization = `Bearer ${user.token}`;
+      }
 
-        const data = await res.json();
-        setPetsData(data);
-      };
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/pets`, {
+        headers
+      });
 
-      fetchPets();
+      const data = await res.json();
+      setPetsData(data);
+
+    } catch (err) {
+      console.error("Failed to fetch pets", err);
+    } finally {
       setLoading(false);
-    }, []);
+    }
+  };
 
+  fetchPets();
+}, []);
 
-  const filteredPets = petsData.filter((pet) => {
-    if (filter === "all") return true;
-    return pet.type === filter;
-  });
+const filteredPets = petsData.filter((pet) => {
+  if (filter === "all") return true;
+  return pet.type === filter;
+});
 
-  return (
-    <div className="container my-4">
+return (
+  <div className="container my-4">
 
-      {/* Filter */}
-      <div className="row mb-4">
-        <div className="col-md-4">
-          <select
-            className="form-select"
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-          >
-            <option value="all">All Pets</option>
-            <option value="Dog">Dogs</option>
-            <option value="Cat">Cats</option>
-            <option value="Rabbit">Rabbits</option>
-            <option value="Bird">Birds</option>
-            <option value="Fish">Fish</option>
-            <option value="Other">Other</option>
-          </select>
-        </div>
+    {/* Filter */}
+    <div className="row mb-4">
+      <div className="col-md-4">
+        <select
+          className="form-select"
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+        >
+          <option value="all">All Pets</option>
+          <option value="Dog">Dogs</option>
+          <option value="Cat">Cats</option>
+          <option value="Rabbit">Rabbits</option>
+          <option value="Bird">Birds</option>
+          <option value="Fish">Fish</option>
+          <option value="Other">Other</option>
+        </select>
       </div>
-
-      {/* Pets Grid */}
-      <div className="row">
-        {loading ? (
-          <p>Loading...</p>
-        ) : filteredPets.length > 0 ? (
-          filteredPets.map((pet, index) => (
-            <div className="col-md-3 mb-4" key={index}>
-              <PetsViewer pet={pet} />
-            </div>
-          ))
-        ) : (
-          <p className="text-center">No pets available</p>
-        )}
-      </div>
-
     </div>
-  );
+
+    {/* Pets Grid */}
+    <div className="row">
+      {loading ? (
+        <p>Loading...</p>
+      ) : filteredPets.length > 0 ? (
+        filteredPets.map((pet, index) => (
+          <div className="col-md-3 mb-4" key={index}>
+            <PetsViewer pet={pet} />
+          </div>
+        ))
+      ) : (
+        <p className="text-center">No pets available</p>
+      )}
+    </div>
+
+  </div>
+);
 };
 
 export default Pets;

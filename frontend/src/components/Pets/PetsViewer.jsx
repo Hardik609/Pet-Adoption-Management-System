@@ -13,17 +13,20 @@ const PetsViewer = ({ pet }) => {
       <div className="card h-100 shadow-sm">
         <img
           // src={`${process.env.REACT_APP_API_URL}/images/${pet.filename}`}
-          src={pet.filename}
+          //src={pet.filename}
+          src={"src/assets/homepageDog.png"}
           className="card-img-top"
           alt={pet.name}
-          style={{ height: "200px", objectFit: "cover" }}
+          style={{ height: "200px", objectFit: "fill" }}
         />
 
         <div className="card-body">
           <h5 className="card-title text-warning">{pet.name}</h5>
-          <p className="card-text"><b>Type:</b> {pet.type}</p>
+          <p className="card-text"><b>Category:</b> {pet.category}</p>
+          <p className="card-text"><b>Breed:</b> {pet.breed}</p>
           <p className="card-text"><b>Age:</b> {pet.age}</p>
-          <p className="card-text"><b>Location:</b> {pet.area}</p>
+          <p className="card-text"><b>Gender:</b> {pet.gender}</p>
+          <p className="card-text"><b>Location:</b> {pet.location}</p>
         </div>
 
         <div className="card-footer bg-white border-0 text-center">

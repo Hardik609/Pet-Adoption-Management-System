@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 // import React, { useState, useEffect } from "react";
 // import { assets } from "../../assets/assets";
 // import { useAuthContext } from "../../hooks/useAuthContext";
@@ -212,6 +213,7 @@ import { useAuthContext } from '../../hooks/useAuthContext'
 
 const PostPetSection = () => {
   const { user } = useAuthContext();
+  const [userName, setUserName] = useState("");
   const [name, setName] = useState("");
   const [category, setCategory] = useState("None");
   const [breed, setBreed] = useState("");
@@ -232,11 +234,10 @@ const PostPetSection = () => {
 
   useEffect(() => {
     if (user) {
-      setName(user.name);
+      setUserName(user.name);
       setEmail(user.email);
     }
   }, [user]);
-
 
   useEffect(() => {
     if (!isSubmitting) {
@@ -271,7 +272,6 @@ const PostPetSection = () => {
       !justification ||
       !email ||
       !phone ||
-      
       ageError
     ) {
       setFormError(true);
@@ -309,14 +309,17 @@ const PostPetSection = () => {
         phone
       };
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/pets`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${user.token}`
-        },
-        body: JSON.stringify(payload)
-      });
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/pets/submit`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${user.token}`
+          },
+          body: JSON.stringify(payload)
+        }
+      );
+
 
 
       if (!response.ok) {
@@ -364,7 +367,7 @@ const PostPetSection = () => {
             {/* Name */}
             <div className="col-md-6 mb-3">
               <label className="form-label">Name</label>
-              <input type="text" value={user.name} className="form-control" readOnly />
+              <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="form-control" />
             </div>
 
             {/* Category */}

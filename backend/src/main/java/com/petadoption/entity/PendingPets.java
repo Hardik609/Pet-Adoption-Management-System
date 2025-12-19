@@ -3,7 +3,8 @@ package com.petadoption.entity;
 import jakarta.persistence.*;
 
 @Entity
-public class Pet {
+@Table(name = "pets_pending")
+public class PendingPets {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -13,10 +14,16 @@ public class Pet {
     private String breed;
     private int age;
     private char gender;
-    private String status = "available";
     private String image_url;
-    
-	public Long getId() {
+    private String location;
+    private String description;
+
+    @Column(name = "owner_id")
+    private Long ownerId;
+
+    private String status = "PENDING";
+
+    public Long getId() {
 		return id;
 	}
 	public void setId(Long id) {
@@ -63,5 +70,23 @@ public class Pet {
 	}
 	public void setImage_url(String image_url) {
 		this.image_url = image_url;
+	}
+	public String getLocation() {
+		return location;
+	}
+	public void setLocation(String location) {
+		this.location = location;
+	}
+	public String getdescription() {
+		return description;
+	}
+	public void setdescription(String description) {
+		this.description = description;
+	}
+    public Long getOwnerId() {
+		return ownerId;
+	}
+	public void setOwnerId(Long ownerId) {
+		this.ownerId = ownerId;
 	}
 }
