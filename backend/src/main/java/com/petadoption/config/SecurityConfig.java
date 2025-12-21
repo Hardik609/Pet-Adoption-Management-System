@@ -30,6 +30,8 @@ public class SecurityConfig {
                     "/signup",
                     "/api/otp/**"
                 ).permitAll()
+                .requestMatchers("/images/**").permitAll()
+                .requestMatchers("/pets/submit").authenticated()
                 .requestMatchers(
                     "/pets/**",
                     "/adoptions/**"

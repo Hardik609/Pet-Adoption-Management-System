@@ -13,8 +13,8 @@ public class Pets {
     private String category;
     private String breed;
     private int age;
-    private char gender;
-    private String image_url;
+    private String gender;
+    private String imagePath;
     private String status = "available";
     
     
@@ -48,10 +48,10 @@ public class Pets {
 	public void setAge(int age) {
 		this.age = age;
 	}
-	public char getGender() {
+	public String getGender() {
 		return gender;
 	}
-	public void setGender(char gender) {
+	public void setGender(String gender) {
 		this.gender = gender;
 	}
 	public String getStatus() {
@@ -60,10 +60,10 @@ public class Pets {
 	public void setStatus(String status) {
 		this.status = status;
 	}
-	public String getImage_url() {
-		return image_url;
+	public String getImagePath() {
+		return imagePath;
 	}
-	public void setImage_url(String image_url) {
-		this.image_url = image_url;
+	public void setImagePath(String imagePath) {
+		this.imagePath = imagePath;
 	}
 }

@@ -3,18 +3,11 @@ import AdoptForm from '../AdoptForm/AdoptForm';
 
 const PetsViewer = ({ pet }) => {
   const [showPopup, setShowPopup] = useState(false);
-
-  // const formatTimeAgo = (updatedAt) => {
-  //   return formatDistanceToNow(new Date(updatedAt), { addSuffix: true });
-  // };
-
   return (
     <>
       <div className="card h-100 shadow-sm">
         <img
-          // src={`${process.env.REACT_APP_API_URL}/images/${pet.filename}`}
-          //src={pet.filename}
-          src={"src/assets/homepageDog.png"}
+          src={`${import.meta.env.VITE_API_URL}/images/${pet.imagePath}`}
           className="card-img-top"
           alt={pet.name}
           style={{ height: "200px", objectFit: "fill" }}

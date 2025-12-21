@@ -28,9 +28,11 @@ public class PetApprovalService {
         Pets pet = new Pets();
         pet.setName(pending.getName());
         pet.setCategory(pending.getCategory());
-        pet.setAge(pending.getAge());
         pet.setBreed(pending.getBreed());
+        pet.setAge(pending.getAge());
         pet.setGender(pending.getGender());
+        pet.setImagePath(pending.getImagePath());
+        pet.setStatus("available");
 
         petRepo.save(pet);          // insert into pets
         pendingRepo.delete(pending); // remove from pending

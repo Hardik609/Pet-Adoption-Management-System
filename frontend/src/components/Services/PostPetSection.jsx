@@ -220,7 +220,7 @@ const PostPetSection = () => {
   const [age, setAge] = useState("");
   const [gender, setGender] = useState("None");
   const [location, setLocation] = useState("");
-  const [justification, setJustification] = useState("");
+  const [description, setDescription] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [formError, setFormError] = useState(false);
@@ -260,7 +260,7 @@ const PostPetSection = () => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
     if (
       !name ||
@@ -269,7 +269,7 @@ const PostPetSection = () => {
       !age ||
       gender === "None" ||
       !location ||
-      !justification ||
+      !description ||
       !email ||
       !phone ||
       ageError
@@ -278,78 +278,69 @@ const PostPetSection = () => {
       return;
     }
 
+    if (!user?.token) {
+      console.error("User not authenticated");
+      return;
+    }
+
     setIsSubmitting(true);
 
     const formData = new FormData();
+
     formData.append("name", name);
     formData.append("category", category);
     formData.append("breed", breed);
     formData.append("age", age);
     formData.append("gender", gender);
     formData.append("location", location);
-    formData.append("justification", justification);
+    formData.append("description", description);
     formData.append("email", email);
     formData.append("phone", phone);
 
     if (picture) {
-      formData.append("fileName", fileName);
+      formData.append("file", picture);
     }
 
-    try {
-      const payload = {
-        name,
-        category,
-        breed,
-        age,
-        gender,
-        fileName,
-        location,
-        justification,
-        email,
-        phone
-      };
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/pets/submit`,
+    try {
+      const user = JSON.parse(localStorage.getItem("user"));
+
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/pets/submit`,
         {
           method: "POST",
           headers: {
-            "Content-Type": "application/json",
             Authorization: `Bearer ${user.token}`
           },
-          body: JSON.stringify(payload)
+          body: formData
         }
       );
-
-
 
       if (!response.ok) {
         throw new Error("Network response was not ok");
       }
 
-      console.log("Form submitted successfully");
       setShowPopup(true);
-
-      setEmailError(false);
       setFormError(false);
+
       setName("");
-      setCategory("");
+      setCategory("None");
       setBreed("");
       setAge("");
-      setGender("");
+      setGender("None");
       setPicture(null);
       setLocation("");
-      setJustification("");
-      setEmail("");
+      setDescription("");
       setPhone("");
-      
       setFileName("");
-      togglePopup();
+
     } catch (error) {
       console.error("Error submitting form:", error);
     } finally {
       setIsSubmitting(false);
     }
   };
+
   return (
     <div>
       <section className="container my-5">
@@ -451,13 +442,13 @@ const PostPetSection = () => {
               />
             </div>  
 
-            {/* Justification */}
+            {/* description */}
             <div className="col-12 mb-3">
-              <label className="form-label fw-bold">Justification for giving a pet</label>
+              <label className="form-label fw-bold">Description for giving a pet</label>
               <textarea
                 rows="4"
-                value={justification}
-                onChange={(e) => setJustification(e.target.value)}
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
                 className="form-control"
               ></textarea>
             </div>

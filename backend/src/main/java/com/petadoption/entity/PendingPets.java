@@ -13,10 +13,12 @@ public class PendingPets {
     private String category;
     private String breed;
     private int age;
-    private char gender;
-    private String image_url;
+    private String gender;
+    private String imagePath;
     private String location;
     private String description;
+    private String email;
+    private String phone;
 
     @Column(name = "owner_id")
     private Long ownerId;
@@ -53,10 +55,10 @@ public class PendingPets {
 	public void setAge(int age) {
 		this.age = age;
 	}
-	public char getGender() {
+	public String getGender() {
 		return gender;
 	}
-	public void setGender(char gender) {
+	public void setGender(String gender) {
 		this.gender = gender;
 	}
 	public String getStatus() {
@@ -65,11 +67,11 @@ public class PendingPets {
 	public void setStatus(String status) {
 		this.status = status;
 	}
-	public String getImage_url() {
-		return image_url;
+	public String getImagePath() {
+		return imagePath;
 	}
-	public void setImage_url(String image_url) {
-		this.image_url = image_url;
+	public void setImagePath(String imagePath) {
+		this.imagePath = imagePath;
 	}
 	public String getLocation() {
 		return location;
@@ -77,10 +79,10 @@ public class PendingPets {
 	public void setLocation(String location) {
 		this.location = location;
 	}
-	public String getdescription() {
+	public String getDescription() {
 		return description;
 	}
-	public void setdescription(String description) {
+	public void setDescription(String description) {
 		this.description = description;
 	}
     public Long getOwnerId() {
@@ -88,5 +90,17 @@ public class PendingPets {
 	}
 	public void setOwnerId(Long ownerId) {
 		this.ownerId = ownerId;
+	}
+	public String getEmail() {
+		return email;
+	}
+	public void setEmail(String email) {
+		this.email = email;
+	}
+	public String getPhone() {
+		return phone;
+	}
+	public void setPhone(String phone) {
+		this.phone = phone;
 	}
 }
