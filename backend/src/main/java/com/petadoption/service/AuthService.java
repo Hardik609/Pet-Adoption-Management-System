@@ -7,7 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.Map;
+import java.util.*;
 
 @Service
 public class AuthService {
@@ -32,7 +32,7 @@ public class AuthService {
                 "id", u.getId(),
                 "name", u.getName(),
                 "email", u.getEmail(),
-                "token", jwtUtil.generateToken(email)
+                "token", jwtUtil.generateToken(email, List.of("ROLE_USER"))
         );
     }
 
@@ -46,7 +46,7 @@ public class AuthService {
                 "id", u.getId(),
                 "name", u.getName(),
                 "email", u.getEmail(),
-                "token", jwtUtil.generateToken(email)
+                "token", jwtUtil.generateToken(email, List.of("ROLE_USER"))
         );
     }
 }

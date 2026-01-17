@@ -20,7 +20,7 @@ public class PetApprovalService {
     private PetRepository petRepo;
 
     @Transactional
-    public void approvePet(Long pendingPetId, Long adminId) {
+    public void approvePet(Long pendingPetId) {
 
         PendingPets pending = pendingRepo.findById(pendingPetId)
                 .orElseThrow(() -> new RuntimeException("Pet not found"));
@@ -34,7 +34,8 @@ public class PetApprovalService {
         pet.setImagePath(pending.getImagePath());
         pet.setStatus("available");
 
-        petRepo.save(pet);          // insert into pets
-        pendingRepo.delete(pending); // remove from pending
+        petRepo.save(pet);
+        pendingRepo.delete(pending);
     }
 }
+

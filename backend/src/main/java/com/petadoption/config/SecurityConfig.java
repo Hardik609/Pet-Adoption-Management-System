@@ -26,18 +26,28 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(
+                    org.springframework.http.HttpMethod.OPTIONS, "/**"
+                ).permitAll()
+
+                .requestMatchers(
                     "/login",
                     "/signup",
-                    "/api/otp/**"
+                    "/api/otp/**",
+                    "/uploads/**"
                 ).permitAll()
-                .requestMatchers("/images/**").permitAll()
-                .requestMatchers("/pets/submit").authenticated()
-                .requestMatchers(
-                    "/pets/**",
-                    "/adoptions/**"
-                ).authenticated()
+
+                .requestMatchers("/pets/submit")
+                    .hasAnyRole("USER", "ADMIN")
+
+                .requestMatchers("/admin/**")
+                    .hasRole("ADMIN")
+
+                .requestMatchers("/pets/**")
+                    .authenticated()
+
                 .anyRequest().authenticated()
             )
+
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
@@ -47,7 +57,6 @@ public class SecurityConfig {
     public BCryptPasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-    
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
@@ -61,5 +70,4 @@ public class SecurityConfig {
         source.registerCorsConfiguration("/**", config);
         return source;
     }
-
 }

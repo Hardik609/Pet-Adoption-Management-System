@@ -20,23 +20,20 @@ public class AdminController {
     @Autowired
     private PetApprovalService petApprovalService;
 
-    // View all pending pets
+    // View all pending pets (ADMIN ONLY)
     @GetMapping("/pets/pending")
     public List<PendingPets> getPendingPets() {
         return pendingPetRepository.findAll();
     }
 
-    // Approve pet
+    // Approve pet (ADMIN ONLY)
     @PostMapping("/pets/{id}/approve")
-    public ResponseEntity<String> approvePet(
-            @PathVariable Long id,
-            @RequestParam Long adminId) {
-
-        petApprovalService.approvePet(id, adminId);
+    public ResponseEntity<String> approvePet(@PathVariable Long id) {
+        petApprovalService.approvePet(id);
         return ResponseEntity.ok("Pet approved successfully");
     }
 
-    // Reject pet
+    // Reject pet (ADMIN ONLY)
     @PostMapping("/pets/{id}/reject")
     public ResponseEntity<String> rejectPet(@PathVariable Long id) {
         pendingPetRepository.deleteById(id);

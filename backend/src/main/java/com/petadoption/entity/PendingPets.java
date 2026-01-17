@@ -14,7 +14,6 @@ public class PendingPets {
     private String breed;
     private int age;
     private String gender;
-    private String imagePath;
     private String location;
     private String description;
     private String email;
@@ -22,6 +21,9 @@ public class PendingPets {
 
     @Column(name = "owner_id")
     private Long ownerId;
+
+	@Column(name = "image_path")
+    private String imagePath;
 
     private String status = "PENDING";
 
