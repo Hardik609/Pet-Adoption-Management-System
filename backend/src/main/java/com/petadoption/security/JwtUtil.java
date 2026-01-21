@@ -1,24 +1,23 @@
 package com.petadoption.security;
 
+import com.petadoption.entity.User;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.stereotype.Component;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Component
 public class JwtUtil {
 
     private final String SECRET = "petadoptionsecretkeypetadoptionsecretkey";
 
-    public String generateToken(String email, List<String> roles) {
+    public String generateToken(String email, String role) {
         return Jwts.builder()
-                .setClaims(Map.of("roles", roles))
+                .setClaims(Map.of("role", role))
                 .setSubject(email)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 86400000))
+                .setExpiration(new Date(System.currentTimeMillis() + 86400000)) // 1 day
                 .signWith(Keys.hmacShaKeyFor(SECRET.getBytes()), SignatureAlgorithm.HS256)
                 .compact();
     }
@@ -33,13 +32,13 @@ public class JwtUtil {
     }
 
     @SuppressWarnings("unchecked")
-    public List<String> extractRoles(String token) {
+    public List<String> extractRole(String token) {
         return (List<String>) Jwts.parserBuilder()
                 .setSigningKey(Keys.hmacShaKeyFor(SECRET.getBytes()))
                 .build()
                 .parseClaimsJws(token)
                 .getBody()
-                .get("roles");
+                .get("role");
     }
 
     public boolean validateToken(String token) {

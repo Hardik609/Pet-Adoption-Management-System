@@ -4,7 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.petadoption.entity.PendingPets;
-import com.petadoption.entity.Pets;
+import com.petadoption.entity.Pet;
 import com.petadoption.repository.PendingPetRepository;
 import com.petadoption.repository.PetRepository;
 
@@ -25,7 +25,7 @@ public class PetApprovalService {
         PendingPets pending = pendingRepo.findById(pendingPetId)
                 .orElseThrow(() -> new RuntimeException("Pet not found"));
 
-        Pets pet = new Pets();
+        Pet pet = new Pet();
         pet.setName(pending.getName());
         pet.setCategory(pending.getCategory());
         pet.setBreed(pending.getBreed());

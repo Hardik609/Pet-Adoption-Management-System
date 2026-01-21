@@ -25,7 +25,6 @@ public class FileStorageService {
 
         Files.copy(file.getInputStream(), filePath);
 
-        // IMPORTANT: return relative path
         return "/pets/" + fileName;
     }
 }

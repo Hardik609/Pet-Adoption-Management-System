@@ -13,40 +13,49 @@ import java.util.*;
 public class AuthService {
 
     @Autowired
-    private UserRepository repo;
+    private UserRepository userRepository;
 
     @Autowired
-    private PasswordEncoder encoder;
+    private PasswordEncoder passwordEncoder;
 
     @Autowired
     private JwtUtil jwtUtil;
 
+    // ✅ SIGNUP (NO OTP LOGIC HERE)
     public Map<String, Object> signup(String name, String email, String password) {
-        User u = new User();
-        u.setName(name);
-        u.setEmail(email);
-        u.setPassword(encoder.encode(password));
-        repo.save(u);
+        Map<String, Object> response = new HashMap<>();
+        User u = userRepository.findByEmail(email).get();
+        if (userRepository.findByEmail(email).isPresent()) {
+            response.put("success", false);
+            response.put("message", "Email already exists");
+            return response;
+        }
 
         return Map.of(
                 "id", u.getId(),
                 "name", u.getName(),
                 "email", u.getEmail(),
-                "token", jwtUtil.generateToken(email, List.of("ROLE_USER"))
+                "token", jwtUtil.generateToken(email, "USER")
         );
     }
 
+    // (Optional) login logic if you want service-based login later
     public Map<String, Object> login(String email, String password) {
-        User u = repo.findByEmail(email).orElseThrow();
+        Map<String, Object> response = new HashMap<>();
+        User u = userRepository.findByEmail(email).get();
 
-        if (!encoder.matches(password, u.getPassword()))
-            throw new RuntimeException("Invalid credentials");
+        Optional<User> userOptional = userRepository.findByEmail(email);
+        if (userOptional.isEmpty()) {
+            response.put("success", false);
+            response.put("message", "User not found");
+            return response;
+        }
 
         return Map.of(
                 "id", u.getId(),
                 "name", u.getName(),
                 "email", u.getEmail(),
-                "token", jwtUtil.generateToken(email, List.of("ROLE_USER"))
+                "token", jwtUtil.generateToken(email, "USER")
         );
     }
 }

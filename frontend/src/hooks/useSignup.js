@@ -1,7 +1,5 @@
-/* eslint-disable no-unused-vars */
-/* eslint-disable no-undef */
-import { useState } from 'react';
-import { useAuthContext } from './useAuthContext';
+import { useState } from "react";
+import { useAuthContext } from "./useAuthContext";
 
 export const useSignup = () => {
   const [signupError, setSignupError] = useState(null);
@@ -12,47 +10,50 @@ export const useSignup = () => {
     setSignupIsLoading(true);
     setSignupError(null);
 
-    console.log(import.meta.env.VITE_API_URL);
-
-
     try {
-      const otpResponse = await fetch(
-      `${import.meta.env.VITE_API_URL}/api/otp/verify`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, otp })
-      }
-    );
-
-      const jsonOtp = await otpResponse.json();
-      if (!otpResponse.ok) {
-        setSignupIsLoading(false);
-        setSignupError(jsonOtp.error || 'OTP verification failed. Please try again.');
-      } else {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/signup`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ name, email, password }),
-        });
-
-        const json = await response.json();
-
-        if (!response.ok) {
-          setSignupIsLoading(false);
-          setSignupError(json.error || 'Something went wrong. Please try again.');
-        } else {
-          localStorage.setItem('user', JSON.stringify(json));
-
-          dispatch({ type: 'LOGIN', payload: user });
-
-          setSignupIsLoading(false);
-          setSignupError(null);
+      // 🔥 Signup WITH OTP (backend verifies OTP)
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/auth/signup`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name,
+            email,
+            password,
+            otp,
+          }),
         }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok || data.success === false) {
+        throw new Error(data.message || "Signup failed");
       }
-    } catch (error) {
+
+      // ✅ Save user & token
+      localStorage.setItem("user", JSON.stringify(data.user));
+      localStorage.setItem("token", data.token);
+
+      // ✅ Update auth context
+      dispatch({
+        type: "LOGIN",
+        payload: {
+          user: data.user,
+          token: data.token,
+        },
+      });
+
       setSignupIsLoading(false);
-      setSignupError('Network error. Please try again.');
+      return { success: true };
+
+    } catch (error) {
+      setSignupError(error.message);
+      setSignupIsLoading(false);
+      return { success: false, error: error.message };
     }
   };
 

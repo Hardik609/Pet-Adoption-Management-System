@@ -1,44 +1,55 @@
-/* eslint-disable no-unused-vars */
-/* eslint-disable no-undef */
-import { useState } from 'react';
-import { useAuthContext } from './useAuthContext';
+import { useState } from "react";
+import { useAuthContext } from "./useAuthContext";
 
 export const useLogin = () => {
-  const [loginError, setloginError] = useState(null);
+  const [loginError, setLoginError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const { dispatch } = useAuthContext();
 
   const login = async (email, password) => {
     setIsLoading(true);
-    setloginError(null);
-
-    //console.log(import.meta.env.VITE_API_URL);
-
+    setLoginError(null);
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/auth/login`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email, password }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok || data.success === false) {
+        throw new Error(data.message || "Invalid email or password");
+      }
+
+      // ✅ Save only required data
+      localStorage.setItem("user", JSON.stringify(data.user));
+      localStorage.setItem("token", data.token);
+
+      // ✅ Update global auth state
+      dispatch({
+        type: "LOGIN",
+        payload: {
+          user: data.user,
+          token: data.token,
+        },
       });
 
-      const json = await response.json();
-
-      if (!response.ok) {
-        setIsLoading(false);
-        setloginError(json.error || 'Login failed. Please try again.');
-      } else {
-        localStorage.setItem('user', JSON.stringify(json));
-
-        dispatch({ type: 'LOGIN', payload: json });
-
-        setIsLoading(false);
-      }
-    } catch (loginError) {
       setIsLoading(false);
-      setloginError('Network loginError. Please try again.');
+      return { success: true };
+
+    } catch (error) {
+      setLoginError(error.message);
+      setIsLoading(false);
+      return { success: false, error: error.message };
     }
   };
 
-  return { login, isLoading, loginError, setloginError };
+  return { login, isLoading, loginError, setLoginError };
 };

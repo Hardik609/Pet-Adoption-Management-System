@@ -25,6 +25,24 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     @Autowired
     private CustomUserDetailsService userDetailsService;
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+
+        String path = request.getServletPath();
+
+        System.out.println("🔥 FILTER CHECK PATH = " + path);
+
+        return path.startsWith("/api-auth")
+                || path.startsWith("/api/auth")
+                || path.startsWith("/api/otp")
+
+                || path.startsWith("/admin/forms")
+
+                || path.startsWith("/pets")
+                || path.startsWith("/images")
+                || path.startsWith("/adoptions")
+                || path.equals("/api-auth/login");
+    }
 
     @Override
     protected void doFilterInternal(
@@ -49,7 +67,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
                 if (jwtUtil.validateToken(token)) {
 
-                    List<String> roles = jwtUtil.extractRoles(token);
+                    List<String> roles = jwtUtil.extractRole(token);
                     System.out.println("Roles from token: " + roles);
 
                     List<SimpleGrantedAuthority> authorities =
