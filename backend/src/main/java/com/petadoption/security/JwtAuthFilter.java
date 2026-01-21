@@ -25,24 +25,32 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     @Autowired
     private CustomUserDetailsService userDetailsService;
+
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
 
         String path = request.getServletPath();
 
-        System.out.println("🔥 FILTER CHECK PATH = " + path);
+        return
+                // PUBLIC PET READ
+                (request.getMethod().equals("GET") && path.startsWith("/pets"))
 
-        return path.startsWith("/api-auth")
+                // STATIC
+                || path.startsWith("/images")
+
+                // AUTH
+                || path.startsWith("/api-auth")
                 || path.startsWith("/api/auth")
                 || path.startsWith("/api/otp")
 
-                || path.startsWith("/admin/forms")
+                // PUBLIC FORMS
+                || path.startsWith("/form")
 
-                || path.startsWith("/pets")
-                || path.startsWith("/images")
-                || path.startsWith("/adoptions")
-                || path.equals("/api-auth/login");
-    }
+                // ADMIN
+                || path.startsWith("/admin/forms");
+        }
+
+
 
     @Override
     protected void doFilterInternal(
@@ -52,45 +60,39 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         String authHeader = request.getHeader("Authorization");
-        System.out.println("JWT HEADER: " + request.getHeader("Authorization"));
 
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
 
             String token = authHeader.substring(7);
-            String username = jwtUtil.extractUsername(token);
 
-            if (username != null &&
-                SecurityContextHolder.getContext().getAuthentication() == null) {
+            if (jwtUtil.validateToken(token)
+                    && SecurityContextHolder.getContext().getAuthentication() == null) {
+
+                String username = jwtUtil.extractUsername(token);
+                String role = jwtUtil.extractRole(token); // ✅ SINGLE STRING
 
                 UserDetails userDetails =
                         userDetailsService.loadUserByUsername(username);
 
-                if (jwtUtil.validateToken(token)) {
+                // ✅ Build authority correctly
+                SimpleGrantedAuthority authority =
+                        new SimpleGrantedAuthority("ROLE_" + role);
 
-                    List<String> roles = jwtUtil.extractRole(token);
-                    System.out.println("Roles from token: " + roles);
+                UsernamePasswordAuthenticationToken authToken =
+                        new UsernamePasswordAuthenticationToken(
+                                userDetails,
+                                null,
+                                List.of(authority)
+                        );
 
-                    List<SimpleGrantedAuthority> authorities =
-                            roles.stream()
-                                 .map(SimpleGrantedAuthority::new)
-                                 .toList();
+                authToken.setDetails(
+                        new WebAuthenticationDetailsSource()
+                                .buildDetails(request)
+                );
 
-                    UsernamePasswordAuthenticationToken authToken =
-                            new UsernamePasswordAuthenticationToken(
-                                    userDetails,
-                                    null,
-                                    authorities
-                            );
-
-                    authToken.setDetails(
-                            new WebAuthenticationDetailsSource()
-                                    .buildDetails(request)
-                    );
-
-                    SecurityContextHolder
-                            .getContext()
-                            .setAuthentication(authToken);
-                }
+                SecurityContextHolder
+                        .getContext()
+                        .setAuthentication(authToken);
             }
         }
 

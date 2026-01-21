@@ -5,9 +5,10 @@ const PetsViewer = ({ pet }) => {
   const [showPopup, setShowPopup] = useState(false);
 
   // ✅ FIXED: correct path to images served from Spring Boot static/images
-  const imageUrl = pet.image_url
-    ? `http://localhost:8080/images/${pet.image_url}`
-    : "https://via.placeholder.com/300x200?text=No+Image";
+  const imageUrl = pet.imagePath
+  ? `${import.meta.env.VITE_API_URL}/images/${pet.imagePath}`
+  : "https://via.placeholder.com/300x200?text=No+Image";
+
 
   return (
     <>

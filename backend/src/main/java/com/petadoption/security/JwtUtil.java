@@ -1,11 +1,11 @@
 package com.petadoption.security;
 
-import com.petadoption.entity.User;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
+import java.util.Date;
+import java.util.Map;
 
 @Component
 public class JwtUtil {
@@ -17,7 +17,7 @@ public class JwtUtil {
                 .setClaims(Map.of("role", role))
                 .setSubject(email)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 86400000)) // 1 day
+                .setExpiration(new Date(System.currentTimeMillis() + 86400000))
                 .signWith(Keys.hmacShaKeyFor(SECRET.getBytes()), SignatureAlgorithm.HS256)
                 .compact();
     }
@@ -31,14 +31,14 @@ public class JwtUtil {
                 .getSubject();
     }
 
-    @SuppressWarnings("unchecked")
-    public List<String> extractRole(String token) {
-        return (List<String>) Jwts.parserBuilder()
+    // ✅ FIXED
+    public String extractRole(String token) {
+        return Jwts.parserBuilder()
                 .setSigningKey(Keys.hmacShaKeyFor(SECRET.getBytes()))
                 .build()
                 .parseClaimsJws(token)
                 .getBody()
-                .get("role");
+                .get("role", String.class);
     }
 
     public boolean validateToken(String token) {
@@ -48,7 +48,7 @@ public class JwtUtil {
                 .build()
                 .parseClaimsJws(token);
             return true;
-        } catch (Exception e) {
+        } catch (JwtException e) {
             return false;
         }
     }

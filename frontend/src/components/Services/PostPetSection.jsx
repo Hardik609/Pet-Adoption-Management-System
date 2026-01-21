@@ -105,6 +105,9 @@ const PostPetSection = () => {
         `${import.meta.env.VITE_API_URL}/pets/submit`,
         {
           method: "POST",
+          headers: {
+            Authorization: `Bearer ${user.token}`
+          },
           body: formData
         }
       );
@@ -164,9 +167,9 @@ const PostPetSection = () => {
             <div className="col-md-6 mb-3">
               <label>Name</label>
               <input
-                value={user?.name}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 className="form-control"
-                readOnly
               />
             </div>
 
@@ -258,11 +261,7 @@ const PostPetSection = () => {
 
             <div className="col-md-6 mb-3">
               <label>Email</label>
-              <input
-                value={user?.email}
-                className="form-control"
-                readOnly
-              />
+              <input value={email} className="form-control" readOnly />
             </div>
 
             <div className="col-md-6 mb-3">

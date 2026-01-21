@@ -8,7 +8,7 @@ export const useLogin = () => {
 
   const login = async (email, password) => {
     setIsLoading(true);
-    setLoginError(null);
+    setLoginError(null);            
 
     try {
       const response = await fetch(
@@ -28,18 +28,27 @@ export const useLogin = () => {
         throw new Error(data.message || "Invalid email or password");
       }
 
-      // ✅ Save only required data
-      localStorage.setItem("user", JSON.stringify(data.user));
-      localStorage.setItem("token", data.token);
+      const userWithToken = {
+        ...data.user,
+        token: data.token
+      };
 
-      // ✅ Update global auth state
       dispatch({
         type: "LOGIN",
-        payload: {
-          user: data.user,
-          token: data.token,
-        },
+        payload: userWithToken
       });
+
+      localStorage.setItem("user", JSON.stringify({
+        email: data.email,
+        name: data.name,
+        token: data.token,
+        role: data.role
+      }));
+
+
+      console.log("AUTH CONTEXT USER:", data.user);
+
+
 
       setIsLoading(false);
       return { success: true };

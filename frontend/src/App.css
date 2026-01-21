@@ -12,3 +12,12 @@
   border-radius: 45px;
 
 }
+
+/* Admin Login Background */
+.admin-gradient-bg {
+  background: linear-gradient(
+    135deg,
+    #0d6efd 0%,
+    #084298 100%
+  );
+}

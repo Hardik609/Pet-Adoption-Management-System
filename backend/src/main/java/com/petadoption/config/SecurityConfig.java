@@ -45,18 +45,19 @@ public class SecurityConfig {
                     "/uploads/**"
                 ).permitAll()
 
-                .requestMatchers("/api/user/**").hasRole("USER")
-                .requestMatchers("/api/admin/**").hasRole("ADMIN")
-
-
-                .requestMatchers("/pets/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/pets/**").permitAll()
                 .requestMatchers("/images/**").permitAll()
-
-                .requestMatchers("/form/save").permitAll()
                 .requestMatchers("/adoptions/**").permitAll()
+                .requestMatchers("/form/save").permitAll()
+                
+                .requestMatchers(HttpMethod.POST, "/pets/submit").hasRole("USER")
 
+                .requestMatchers("/api-auth/login").permitAll()
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/otp/**").permitAll()
+
+                .requestMatchers("/api/user/**").hasRole("USER")
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
                 .requestMatchers(
                     "/img/**",

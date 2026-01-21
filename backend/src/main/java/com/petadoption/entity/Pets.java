@@ -3,11 +3,13 @@ package com.petadoption.entity;
 import jakarta.persistence.*;
 
 @Entity
-public class Pet {
+public class Pets {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(name = "pet_id")
 	private Long id;
+
 	private String name;
 	private String category;
 	private String breed;
@@ -15,7 +17,7 @@ public class Pet {
 	private String gender;
 	private String status = "available";
 
-	@Column(name = "image_path")
+	@Column(name = "image_url")
     private String imagePath;
 
 	public Long getId() {

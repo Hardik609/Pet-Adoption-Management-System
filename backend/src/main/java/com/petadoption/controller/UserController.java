@@ -1,6 +1,6 @@
 package com.petadoption.controller;
 
-import com.petadoption.entity.Pet;
+import com.petadoption.entity.Pets;
 import com.petadoption.entity.PendingPets;
 
 import com.petadoption.repository.PetRepository;
@@ -38,7 +38,7 @@ public class UserController {
 
     // SHOW APPROVED PETS
     @GetMapping
-    public List<Pet> getAllApprovedPets() {
+    public List<Pets> getAllApprovedPets() {
         return petRepository.findAll();
     }
 

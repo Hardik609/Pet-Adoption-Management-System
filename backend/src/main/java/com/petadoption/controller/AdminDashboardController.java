@@ -32,7 +32,7 @@ public class AdminDashboardController {
     // 3️⃣ Total adoption requests
     @GetMapping("/requests")
     public Map<String, Object> getTotalRequests() {
-        Integer count = jdbc.queryForObject("SELECT COUNT(*) FROM adoption_request", Integer.class);
+        Integer count = jdbc.queryForObject("SELECT COUNT(*) FROM adoption_requests", Integer.class);
         return Map.of("count", count);
     }
 
@@ -43,18 +43,20 @@ public class AdminDashboardController {
         return Map.of("count", count);
     }
 
-    // 5️⃣ Pet type distribution
+    // 5️⃣ Pet category distribution
     @GetMapping("/pet-types")
     public List<Map<String, Object>> getPetTypes() {
         return jdbc.query(
-                "SELECT breed AS type, COUNT(*) AS count FROM pets GROUP BY breed",
-                (rs, rowNum) -> {
-                    Map<String, Object> map = new HashMap<>();
-                    map.put("_id", rs.getString("type"));
-                    map.put("count", rs.getInt("count"));
-                    return map;
-                });
+            "SELECT category AS type, COUNT(*) AS count FROM pets GROUP BY category",
+            (rs, rowNum) -> {
+                Map<String, Object> map = new HashMap<>();
+                map.put("_id", rs.getString("type"));
+                map.put("count", rs.getInt("count"));
+                return map;
+            }
+        );
     }
+
 
     // 6️⃣ Monthly adoption stats
     @GetMapping("/monthly")
