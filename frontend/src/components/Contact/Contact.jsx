@@ -54,7 +54,7 @@ const Contact = () => {
         {/* Phone */}
         <div className="d-flex align-items-center mb-1 contact-item">
           <FontAwesomeIcon icon={faPhone} className='me-1 phone-icon'/>
-          <a href="tel:+91 8010710536" className="contact-link">
+          <a href="tel:+91 9302601702" className="contact-link">
             +91 8010710536
           </a>
         </div>

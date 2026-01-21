@@ -1,27 +1,55 @@
-/* eslint-disable no-unused-vars */
-import React from 'react'
-import Layout from './components/Layout'
-import { BrowserRouter, Navigate, Route, Router, Routes } from 'react-router-dom'
-import Home from './components/Home/Home'
-import Services from './components/Services/Services'
-import Pets from './components/Pets/Pets'
-import Contact from './components/Contact/Contact'
-import Auth from './components/Auth/Auth'
-import { useAuthContext } from './hooks/useAuthContext'
-import ProtectedRoute from './components/ProtectedRoute'
-import Profile from './components/Profile/Profile'
-import FourOhFourPage from './components/FourZeroFour/FourOFour'
+import React from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
 
+import Layout from "./components/Layout";
+import Home from "./components/Home/Home";
+import Services from "./components/Services/Services";
+import Pets from "./components/Pets/Pets";
+import Contact from "./components/Contact/Contact";
+import Auth from "./components/Auth/Auth";
+import Profile from "./components/Profile/Profile";
+import FourOhFourPage from "./components/FourZeroFour/FourOFour";
 
+import AdminLogin from "./components/AdminPanel/AdminLogin";
+import AdminPanel from "./components/AdminPanel/AdminPanel";
+import ProtectedRoute from "./components/ProtectedRoute";
+import Dashboard from "./components/AdminPanel/Dashboard";
+import { useAuthContext } from "./hooks/useAuthContext";
 
 const App = () => {
   const { user } = useAuthContext();
+
   return (
     <Routes>
+      {/* ========== PUBLIC ROUTES ========== */}
+
+
+
+
+
+      {/* User Login / Signup */}
+      <Route path="/auth" element={!user ? <Auth /> : <Navigate to="/" />} />
+
+      {/* Admin Login - ALWAYS accessible */}
+      <Route path="/admin" element={<AdminLogin />} />
+
+       <Route
+        path="/admin/dashboard"
+        element={
+        <ProtectedRoute adminOnly={true}>
+         <AdminPanel>
+          <Dashboard />
+         </AdminPanel>
+       </ProtectedRoute>
+       }
+     />
+
+
+      {/* ========== USER ROUTES ========== */}
       <Route
         path="/"
         element={
-          <ProtectedRoute user={user}>
+          <ProtectedRoute>
             <Layout>
               <Home description="Ensure you are fully prepared to provide proper care and attention to your pet before welcoming them into your home." />
             </Layout>
@@ -30,9 +58,9 @@ const App = () => {
       />
 
       <Route
-        path='/services'
+        path="/services"
         element={
-          <ProtectedRoute user={user}>
+          <ProtectedRoute>
             <Layout>
               <Services />
             </Layout>
@@ -41,9 +69,9 @@ const App = () => {
       />
 
       <Route
-        path='/pets'
+        path="/pets"
         element={
-          <ProtectedRoute user={user}>
+          <ProtectedRoute>
             <Layout>
               <Pets />
             </Layout>
@@ -52,9 +80,9 @@ const App = () => {
       />
 
       <Route
-        path='/profile'
+        path="/profile"
         element={
-          <ProtectedRoute user={user}>
+          <ProtectedRoute>
             <Layout>
               <Profile />
             </Layout>
@@ -63,9 +91,9 @@ const App = () => {
       />
 
       <Route
-        path='/contact'
+        path="/contact"
         element={
-          <ProtectedRoute user={user}>
+          <ProtectedRoute>
             <Layout>
               <Contact />
             </Layout>
@@ -73,17 +101,20 @@ const App = () => {
         }
       />
 
+      {/* ========== ADMIN ROUTE ========== */}
       <Route
-        path="/auth"
-        element={!user ? <Auth /> : <Navigate to="/" />}
+        path="/admin-panel"
+        element={
+          <ProtectedRoute adminOnly={true}>
+            <AdminPanel />
+          </ProtectedRoute>
+        }
       />
 
-      <Route
-        path="/*"
-        element={<FourOhFourPage/>}
-      />
+      {/* ========== 404 ========== */}
+      <Route path="*" element={<FourOhFourPage />} />
     </Routes>
-  )
-}
+  );
+};
 
-export default App
+export default App;
