@@ -16,14 +16,6 @@ const Services = () => {
           <PostPetSection/>
         </div>
       </div>
-
-      {/* 🔥 ADD THIS PART */}
-      <div className='row mt-5'>
-        <div className='col-12'>
-          <SubmitPet />
-        </div>
-      </div>
-
     </div>
   )
 }
