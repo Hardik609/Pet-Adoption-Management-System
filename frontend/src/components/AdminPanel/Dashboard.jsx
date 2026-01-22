@@ -358,7 +358,7 @@ const Dashboard = () => {
                                                 <i className="bi bi-database-fill text-primary fs-4 me-3"></i>
                                                 <div>
                                                     <h6 className="mb-1">Database</h6>
-                                                    <p className="text-muted mb-0">MongoDB Atlas connected</p>
+                                                    <p className="text-muted mb-0">MySQL connected</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -367,7 +367,7 @@ const Dashboard = () => {
                                                 <i className="bi bi-shield-fill-check text-success fs-4 me-3"></i>
                                                 <div>
                                                     <h6 className="mb-1">Security</h6>
-                                                    <p className="text-muted mb-0">JWT Authentication active</p>
+                                                    <p className="text-muted mb-0">JWT authentication active</p>
                                                 </div>
                                             </div>
                                         </div>

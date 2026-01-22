@@ -1,7 +1,6 @@
 import React from 'react'
 import AdoptSection from './AdoptSection'
 import PostPetSection from './PostPetSection'
-import SubmitPet from "./SubmitPet";
 
 const Services = () => {
   return (

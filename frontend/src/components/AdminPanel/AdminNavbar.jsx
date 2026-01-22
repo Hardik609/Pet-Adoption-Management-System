@@ -31,7 +31,7 @@ function AdminNavbar() {
         <span className="navbar-brand d-flex align-items-center">
           <i className="bi bi-shield-check fs-3 me-2"></i>
           <div>
-            <span className="fw-bold">Admin Panel</span>
+            <span className="fw-bold">Welcome, Admin!</span>
             <small className="d-block text-white-50" style={{ fontSize: '0.75rem' }}>
               Pet Adoption Management System
             </small>
