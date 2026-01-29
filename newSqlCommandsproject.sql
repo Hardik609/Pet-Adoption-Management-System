@@ -1,144 +1,417 @@
-create database pet_adoption_and_tracking;
-use pet_adoption_and_tracking;
+create DATABASE pet_adoption_and_tracking_management_system_check;
+USE pet_adoption_and_tracking_management_system_check;
 
-CREATE TABLE adopters (
-    adopter_id INT AUTO_INCREMENT PRIMARY KEY,
+
+-- Users Table (for authentication)
+CREATE TABLE users (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(150) NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
-    phone VARCHAR(20),
-    address TEXT,
-    password_hash VARCHAR(255) NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    password VARCHAR(255) NOT NULL,
+    role VARCHAR(20) DEFAULT 'USER',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_email (email),
+    INDEX idx_role (role)
 );
+select database();
+UPDATE admins SET password_hash = '$2a$10$D84XmtyQhEeKSsplsoSSN.DcJ59b2GPx2HjbyK.wtTvG7lWRZSlsW'
+WHERE email = 'satyampatelkatni2003@gmail.com';
+
+UPDATE users SET password = '$2a$10$D84XmtyQhEeKSsplsoSSN.DcJ59b2GPx2HjbyK.wtTvG7lWRZSlsW'
+WHERE email = 'satyampatelkatni2003@gmail.com';
+
+SELECT * FROM admins WHERE email = 'satyampatelkatni2003@gmail.com';
+
+-- Admins Table
 CREATE TABLE admins (
     admin_id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(150) NOT NULL,
     email VARCHAR(100) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    role VARCHAR(20) DEFAULT 'ADMIN',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_email (email)
 );
-
+-- Shelters Table
 CREATE TABLE shelters (
     shelter_id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(150) NOT NULL,
     address TEXT,
     phone VARCHAR(20),
-    email VARCHAR(100)
+    email VARCHAR(100),
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE pets (
-    pet_id INT AUTO_INCREMENT PRIMARY KEY,
+-- Main Pets Table (approved pets for adoption)
+CREATE TABLE pet (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
+    category VARCHAR(50) NOT NULL,
     breed VARCHAR(50),
     age INT,
-    gender ENUM('M','F','U') DEFAULT 'U',
-    status ENUM('available','pending','adopted') DEFAULT 'available',
+    gender CHAR(1) DEFAULT 'U',
+    status VARCHAR(20) DEFAULT 'available',
     image_url VARCHAR(255),
     shelter_id INT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-
-    FOREIGN KEY (shelter_id) REFERENCES shelters(shelter_id)
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (shelter_id) REFERENCES shelters(shelter_id) ON DELETE SET NULL,
+    INDEX idx_status (status),
+    INDEX idx_category (category)
 );
 
+-- Pending Pets Table (user submissions awaiting approval)
+CREATE TABLE pets_pending (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    email VARCHAR(100) NOT NULL,
+    category VARCHAR(50) NOT NULL,
+    breed VARCHAR(50),
+    age INT,
+    gender VARCHAR(10),
+    location VARCHAR(100),
+    description TEXT,
+    phone VARCHAR(20),
+    image_path VARCHAR(255),
+    status VARCHAR(20) DEFAULT 'pending',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_status (status),
+    INDEX idx_email (email)
+);
+
+select database();
+
+-- DROP TRIGGER IF EXISTS trg_update_pet_status_after_request;
+-- DROP TRIGGER IF EXISTS trg_set_decision_date;
+-- DROP PROCEDURE IF EXISTS submit_adoption_request;
+-- DROP PROCEDURE IF EXISTS approve_adoption_request;
+-- DROP PROCEDURE IF EXISTS reject_adoption_request;
+-- DROP PROCEDURE IF EXISTS get_pending_requests;
+-- drop table adoption_requests;
+
+-- Adoption Requests Table
 CREATE TABLE adoption_requests (
-    request_id INT AUTO_INCREMENT PRIMARY KEY,
-    pet_id INT NOT NULL,
-    adopter_id INT NOT NULL,
-    status ENUM('pending','approved','rejected') DEFAULT 'pending',
-    request_date DATETIME DEFAULT CURRENT_TIMESTAMP,
-    decision_date DATETIME,
-    admin_notes TEXT,
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
 
-    FOREIGN KEY (pet_id) REFERENCES pets(pet_id),
-    FOREIGN KEY (adopter_id) REFERENCES adopters(adopter_id)
+    user_id BIGINT NOT NULL,
+    pet_id BIGINT NOT NULL,
+
+    living_situation TEXT,
+    previous_experience TEXT,
+    family_composition TEXT,
+
+    status ENUM('PENDING','APPROVED','REJECTED') DEFAULT 'PENDING',
+
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_adoption_user
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+
+    CONSTRAINT fk_adoption_pet
+        FOREIGN KEY (pet_id) REFERENCES pet(id) ON DELETE CASCADE,
+
+    INDEX idx_user_id (user_id),
+    INDEX idx_pet_id (pet_id),
+    INDEX idx_status (status)
 );
 
+
+-- OTP Verification Table
+CREATE TABLE otp_verification (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(255) NOT NULL,
+    otp VARCHAR(10) NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    expiry_time DATETIME NOT NULL,
+    verified BOOLEAN DEFAULT FALSE,
+    INDEX idx_email (email)
+);
+
+-- Tracking Table (for adopted pets)
 CREATE TABLE tracking (
     track_id INT AUTO_INCREMENT PRIMARY KEY,
-    pet_id INT NOT NULL,
+    pet_id BIGINT NOT NULL,
     location VARCHAR(255),
     note TEXT,
     vet_visit_date DATE,
     vaccinated BOOLEAN DEFAULT FALSE,
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-
-    FOREIGN KEY (pet_id) REFERENCES pets(pet_id)
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (pet_id) REFERENCES pet(id) ON DELETE CASCADE,
+    INDEX idx_pet_id (pet_id)
 );
 
+-- ========================================
+-- 3. INSERT INITIAL DATA
+-- ========================================
+
+-- Insert shelters
 INSERT INTO shelters (name, address, phone, email) VALUES
 ('Happy Paws Shelter', 'Plot 21, Green Street, Mumbai', '9876543210', 'contact@happypaws.org'),
 ('Animal Care Center', 'Sec 12, Baner, Pune', '9988776655', 'support@animalcare.in'),
 ('Rescue & Love Foundation', 'Park Road, Nagpur', '9090909090', 'info@rescueandlove.org');
 
-INSERT INTO admins (name, email, password_hash) VALUES
-('Rohit Sharma', 'rohit.admin@petsystem.com', '$2b$10$adminhash1'),
-('Sneha Patel', 'sneha.admin@petsystem.com', '$2b$10$adminhash2');
+-- Insert admin (password: admin123)
+-- Insert admin (password: admin123)
 
-INSERT INTO adopters (name, email, phone, address, password_hash) VALUES
-('Utkarsh Phalphale', 'utkarsh@example.com', '9870011223', 'Nagpur, MH', '$2b$10$pass1'),
-('Aditi Deshmukh', 'aditi.d@example.com', '9091234567', 'Pune, MH', '$2b$10$pass2'),
-('Rahul Joshi', 'rahul.j@example.com', '9822334455', 'Mumbai, MH', '$2b$10$pass3'),
-('Kavya Menon', 'kavya.m@example.com', '9877654321', 'Thane, MH', '$2b$10$pass4');
+INSERT INTO admins (name, email, password_hash, role, created_at)
+VALUES (
+    'System Admin',
+    'satyampatelkatni2003@gmail.com',
+    '$2a$10$dXJ3SW6G7P2YQZTbNunLOe5jP4Qr0sJmKrqKVrqHQOBvqXLr9buMm',
+    'ADMIN',
+    NOW()
+);
 
-INSERT INTO pets (name, breed, age, gender, status, image_url, shelter_id) VALUES
-('Bruno', 'Labrador', 3, 'M', 'available', 'img/bruno.jpg', 1),
-('Lucy', 'Beagle', 2, 'F', 'available', 'img/lucy.jpg', 1),
-('Shadow', 'German Shepherd', 4, 'M', 'pending', 'img/shadow.jpg', 1),
+UPDATE users 
+SET password = '$2a$10$dXJ3SW6G7P9wIJnDOvi.Mu/z2oHB7JDWRB0FXjfHEiJGFtT2pQQEu'
+WHERE email = 'satyampatelkatni2003@gmail.com';
 
-('Mia', 'Persian Cat', 1, 'F', 'available', 'img/mia.jpg', 2),
-('Oscar', 'Siamese Cat', 5, 'M', 'available', 'img/oscar.jpg', 2),
-('Luna', 'Indie Cat', 2, 'F', 'adopted', 'img/luna.jpg', 2),
+SELECT id, name, email, role FROM users WHERE email = 'satyampatelkatni2003@gmail.com';
 
-('Rocky', 'Golden Retriever', 3, 'M', 'available', 'img/rocky.jpg', 3),
-('Ginger', 'Pug', 6, 'F', 'available', 'img/ginger.jpg', 3),
-('Simba', 'Indie Dog', 2, 'M', 'adopted', 'img/simba.jpg', 3),
+-- Check pet table
+SELECT id, name, image_url 
+FROM pet 
+WHERE image_url LIKE '%\\%' OR image_url LIKE '%/%';
 
-('Snowy', 'Husky', 1, 'F', 'pending', 'img/snowy.jpg', 1),
-('Chirpy', 'Parrot', 2, 'U', 'available', 'img/chirpy.jpg', 2),
-('Bubbles', 'Rabbit', 1, 'U', 'available', 'img/bubbles.jpg', 3);
+-- Check pets_pending table
+SELECT id, name, image_path 
+FROM pets_pending 
+WHERE image_path LIKE '%\\%' OR image_path LIKE '%/%';
 
-INSERT INTO adoption_requests (pet_id, adopter_id, status, request_date) VALUES
-(3, 1, 'pending', NOW()),     -- Utkarsh requested Shadow
-(10, 2, 'pending', NOW()),    -- Aditi requested Snowy
-(6, 3, 'approved', NOW()),    -- Rahul adopted Luna
-(9, 4, 'approved', NOW());    -- Kavya adopted Simba
+-- Insert test users in users table (password: admin123)
+INSERT INTO users (name, email, password, role) VALUES
+('Admin User', 'satyampatelkatni2003@gmail.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'ADMIN'),
+('Test User', 'user@test.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'USER');
 
-INSERT INTO tracking (pet_id, location, note, vet_visit_date, vaccinated) VALUES
-(6, 'Pune', 'Routine check-up', '2025-01-02', TRUE),
-(6, 'Pune', 'Vaccination booster', '2025-02-15', TRUE),
-(9, 'Thane', 'General health check', '2025-01-10', TRUE),
-(9, 'Thane', 'Follow-up visit', '2025-02-20', TRUE);
+-- Insert sample pets
+INSERT INTO pet (name, category, breed, age, gender, status, image_url, shelter_id) VALUES
+('Bruno', 'dog', 'Labrador', 3, 'M', 'available', '1718906386213-550689756.jpg', 1),
+('Lucy', 'dog', 'Beagle', 2, 'F', 'available', '1718906531802-606585739.jpg', 1),
+('Mia', 'cat', 'Persian', 1, 'F', 'available', '1718906182775-8078205.jpeg', 2),
+('Oscar', 'cat', 'Siamese', 5, 'M', 'available', '1718906085691-433161642.jpeg', 2),
+('Rocky', 'dog', 'Golden Retriever', 3, 'M', 'available', '1718906473944-923464963.jpg', 3),
+('Ginger', 'dog', 'Pug', 6, 'F', 'available', '1718906609733-573010075.jpg', 3),
+('Chirpy', 'bird', 'Parrot', 2, 'U', 'available', '1718907085550-787999544.jpg', 2),
+('Goldy', 'fish', 'Goldfish', 1, 'M', 'available', '1718906809727-756049182.jpg', 1),
+('Nemo', 'fish', 'Clown', 1, 'M', 'available', '1718906865077-840488064.jpg', 1),
+('White', 'rabbit', 'Normal', 1, 'F', 'available', '1718906609733-573010075.jpg', 3);
 
+-- ========================================
+-- 4. TRIGGERS
+-- ========================================
 
+-- Trigger: Update pet status when adoption request is updated
 DELIMITER $$
 
 CREATE TRIGGER trg_update_pet_status_after_request
 AFTER UPDATE ON adoption_requests
 FOR EACH ROW
 BEGIN
-    -- When request is approved
-    IF NEW.status = 'approved' THEN
-        UPDATE pets
+    IF NEW.status = 'APPROVED' THEN
+        UPDATE pet
         SET status = 'adopted'
-        WHERE pet_id = NEW.pet_id;
+        WHERE id = NEW.pet_id;
 
-    -- When request is rejected
-    ELSEIF NEW.status = 'rejected' THEN
-        UPDATE pets
+    ELSEIF NEW.status = 'REJECTED' THEN
+        UPDATE pet
         SET status = 'available'
-        WHERE pet_id = NEW.pet_id;
+        WHERE id = NEW.pet_id;
 
-    -- Still pending (default)
-    ELSEIF NEW.status = 'pending' THEN
-        UPDATE pets
+    ELSEIF NEW.status = 'PENDING' THEN
+        UPDATE pet
         SET status = 'pending'
-        WHERE pet_id = NEW.pet_id;
+        WHERE id = NEW.pet_id;
     END IF;
-
 END$$
 
 DELIMITER ;
 
+
+-- Trigger: Update timestamp  when adoption request is approved/rejected
+DELIMITER $$
+
+CREATE TRIGGER trg_set_decision_date
+BEFORE UPDATE ON adoption_requests
+FOR EACH ROW
+BEGIN
+    IF NEW.status IN ('APPROVED', 'REJECTED')
+       AND OLD.status = 'PENDING' THEN
+        SET NEW.updated_at = NOW();
+    END IF;
+END$$
+
+DELIMITER ;
+
+-- ========================================
+-- 5. STORED PROCEDURES
+-- ========================================
+
+-- Procedure: Submit adoption request
+DELIMITER $$
+
+CREATE PROCEDURE submit_adoption_request(
+    IN p_user_id BIGINT,
+    IN p_pet_id BIGINT,
+    IN p_living_situation TEXT,
+    IN p_previous_experience TEXT,
+    IN p_family_composition TEXT
+)
+BEGIN
+    INSERT INTO adoption_requests (
+        user_id,
+        pet_id,
+        living_situation,
+        previous_experience,
+        family_composition,
+        status
+    )
+    VALUES (
+        p_user_id,
+        p_pet_id,
+        p_living_situation,
+        p_previous_experience,
+        p_family_composition,
+        'PENDING'
+    );
+
+    -- Mark pet as pending
+    UPDATE pet
+    SET status = 'pending'
+    WHERE id = p_pet_id;
+END$$
+
+DELIMITER ;
+
+
+-- Procedure: Approve adoption request
+
+DELIMITER $$
+
+CREATE PROCEDURE approve_adoption_request(
+    IN p_request_id BIGINT
+)
+BEGIN
+    UPDATE adoption_requests
+    SET status = 'APPROVED'
+    WHERE id = p_request_id;
+END$$
+
+DELIMITER ;
+
+
+-- Procedure: Reject adoption request
+
+DELIMITER $$
+
+CREATE PROCEDURE reject_adoption_request(
+    IN p_request_id BIGINT
+)
+BEGIN
+    UPDATE adoption_requests
+    SET status = 'REJECTED'
+    WHERE id = p_request_id;
+END$$
+
+DELIMITER ;
+
+-- Procedure: Get all pending requests
+
+DELIMITER $$
+
+CREATE PROCEDURE get_pending_requests()
+BEGIN
+    SELECT
+        ar.id AS request_id,
+        ar.pet_id,
+        p.name AS pet_name,
+        u.name AS user_name,
+        u.email AS user_email,
+        ar.status,
+        ar.created_at
+    FROM adoption_requests ar
+    JOIN pet p ON ar.pet_id = p.id
+    JOIN users u ON ar.user_id = u.id
+    WHERE ar.status = 'PENDING'
+    ORDER BY ar.created_at ASC;
+END$$
+
+DELIMITER ;
+
+-- ========================================
+-- COMPLETE DATABASE FIX
+-- ========================================
+
+USE pet_adoption_and_tracking_management_system;
+
+-- Step 1: Drop ALL triggers and procedures first
+DROP TRIGGER IF EXISTS trg_update_pet_status_after_request;
+DROP TRIGGER IF EXISTS trg_set_decision_date;
+DROP PROCEDURE IF EXISTS submit_adoption_request;
+DROP PROCEDURE IF EXISTS approve_adoption_request;
+DROP PROCEDURE IF EXISTS reject_adoption_request;
+DROP PROCEDURE IF EXISTS get_pending_requests;
+
+-- Step 2: Drop the old adoption_requests table
+DROP TABLE IF EXISTS adoption_requests;
+
+-- Step 3: Create NEW adoption_requests table (NO EMAIL COLUMN!)
+CREATE TABLE adoption_requests (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    
+    -- ✅ Foreign keys (NO email column!)
+    user_id BIGINT NOT NULL,
+    pet_id BIGINT NOT NULL,
+    
+    -- ✅ Application details
+    living_situation TEXT,
+    previous_experience TEXT,
+    family_composition TEXT,
+    
+    -- ✅ Status as ENUM
+    status ENUM('PENDING','APPROVED','REJECTED') DEFAULT 'PENDING',
+    
+    -- ✅ Timestamps
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    
+    -- ✅ Foreign key constraints
+    CONSTRAINT fk_adoption_user
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    
+    CONSTRAINT fk_adoption_pet
+        FOREIGN KEY (pet_id) REFERENCES pet(id) ON DELETE CASCADE,
+    
+    -- ✅ Indexes
+    INDEX idx_user_id (user_id),
+    INDEX idx_pet_id (pet_id),
+    INDEX idx_status (status)
+);
+
+-- Step 4: Verify the structure
+DESCRIBE adoption_requests;
+
+-- Expected columns (NO EMAIL!):
+-- id, user_id, pet_id, living_situation, previous_experience, 
+-- family_composition, status, created_at, updated_at
+
+-- Step 5: Recreate triggers
+DELIMITER $$
+
+CREATE TRIGGER trg_update_pet_status_after_request
+AFTER UPDATE ON adoption_requests
+FOR EACH ROW
+BEGIN
+    IF NEW.status = 'APPROVED' THEN
+        UPDATE pet SET status = 'adopted' WHERE id = NEW.pet_id;
+    ELSEIF NEW.status = 'REJECTED' THEN
+        UPDATE pet SET status = 'available' WHERE id = NEW.pet_id;
+    ELSEIF NEW.status = 'PENDING' THEN
+        UPDATE pet SET status = 'pending' WHERE id = NEW.pet_id;
+    END IF;
+END$$
+
+DELIMITER ;
 
 DELIMITER $$
 
@@ -146,746 +419,822 @@ CREATE TRIGGER trg_set_decision_date
 BEFORE UPDATE ON adoption_requests
 FOR EACH ROW
 BEGIN
-    IF NEW.status IN ('approved', 'rejected') AND OLD.status = 'pending' THEN
-        SET NEW.decision_date = NOW();
+    IF NEW.status IN ('APPROVED', 'REJECTED')
+       AND OLD.status = 'PENDING' THEN
+        SET NEW.updated_at = NOW();
     END IF;
 END$$
 
 DELIMITER ;
 
-
+-- Step 6: Recreate stored procedures
 DELIMITER $$
 
 CREATE PROCEDURE submit_adoption_request(
-    IN p_pet_id INT,
-    IN p_adopter_id INT
+    IN p_user_id BIGINT,
+    IN p_pet_id BIGINT,
+    IN p_living_situation TEXT,
+    IN p_previous_experience TEXT,
+    IN p_family_composition TEXT
 )
 BEGIN
-    INSERT INTO adoption_requests (pet_id, adopter_id, status, request_date)
-    VALUES (p_pet_id, p_adopter_id, 'pending', NOW());
+    INSERT INTO adoption_requests (
+        user_id,
+        pet_id,
+        living_situation,
+        previous_experience,
+        family_composition,
+        status
+    )
+    VALUES (
+        p_user_id,
+        p_pet_id,
+        p_living_situation,
+        p_previous_experience,
+        p_family_composition,
+        'PENDING'
+    );
 
-    -- Mark pet as pending
-    UPDATE pets
-    SET status = 'pending'
-    WHERE pet_id = p_pet_id;
+    UPDATE pet SET status = 'pending' WHERE id = p_pet_id;
 END$$
 
 DELIMITER ;
-
 
 DELIMITER $$
 
 CREATE PROCEDURE approve_adoption_request(
-    IN p_request_id INT
+    IN p_request_id BIGINT
 )
 BEGIN
     UPDATE adoption_requests
-    SET status = 'approved'
-    WHERE request_id = p_request_id;
+    SET status = 'APPROVED'
+    WHERE id = p_request_id;
 END$$
 
 DELIMITER ;
-
 
 DELIMITER $$
 
 CREATE PROCEDURE reject_adoption_request(
-    IN p_request_id INT
+    IN p_request_id BIGINT
 )
 BEGIN
     UPDATE adoption_requests
-    SET status = 'rejected'
-    WHERE request_id = p_request_id;
+    SET status = 'REJECTED'
+    WHERE id = p_request_id;
 END$$
 
 DELIMITER ;
-
 
 DELIMITER $$
 
 CREATE PROCEDURE get_pending_requests()
 BEGIN
-    SELECT ar.request_id, ar.pet_id, p.name AS pet_name,
-           ar.adopter_id, a.name AS adopter_name,
-           ar.request_date
+    SELECT
+        ar.id AS request_id,
+        ar.pet_id,
+        p.name AS pet_name,
+        u.name AS user_name,
+        u.email AS user_email,
+        ar.status,
+        ar.created_at
     FROM adoption_requests ar
-    JOIN pets p ON ar.pet_id = p.pet_id
-    JOIN adopters a ON ar.adopter_id = a.adopter_id
-    WHERE ar.status = 'pending'
-    ORDER BY ar.request_date ASC;
+    JOIN pet p ON ar.pet_id = p.id
+    JOIN users u ON ar.user_id = u.id
+    WHERE ar.status = 'PENDING'
+    ORDER BY ar.created_at ASC;
 END$$
 
 DELIMITER ;
 
+USE pet_adoption_and_tracking_management_system;
 
-
--- Check if you already have admin users:
-SELECT * FROM admins;
-
--- If empty or you want another admin, run:
-INSERT INTO admins (name, email, password_hash) 
-VALUES ('Admin Name', 'admin@petadoption.com', '$2b$10$yourHashedPasswordHere');
-
-
-
--- 1. Add role column to admins table
-ALTER TABLE admins ADD COLUMN role VARCHAR(20) DEFAULT 'ADMIN';
-
-
--- 2. Add role column to adopters table  
-ALTER TABLE adopters ADD COLUMN role VARCHAR(20) DEFAULT 'USER';
-
-
--- Check if role column exists in adopters
-DESCRIBE adopters;
-
--- Check if role column exists in admins
-DESCRIBE admins;
-
--- See what data is already there
-SELECT adopter_id, name, email, role FROM adopters;
-SELECT admin_id, name, email, role FROM admins;
-
--- Update roles for existing records (if not already set)
-UPDATE adopters SET role = 'USER' WHERE role IS NULL OR role = '';
-UPDATE admins SET role = 'ADMIN' WHERE role IS NULL OR role = '';
-
--- Disable safe update mode
-SET SQL_SAFE_UPDATES = 0;
-
--- Now run your updates
-UPDATE adopters SET role = 'USER' WHERE role IS NULL OR role = '';
-UPDATE admins SET role = 'ADMIN' WHERE role IS NULL OR role = '';
-
--- Re-enable safe update mode
-SET SQL_SAFE_UPDATES = 1;
-
--- Use primary key in WHERE clause
-UPDATE adopters 
-SET role = 'USER' 
-WHERE (role IS NULL OR role = '') 
-AND adopter_id > 0;  -- This uses the primary key
-
-UPDATE admins 
-SET role = 'ADMIN' 
-WHERE (role IS NULL OR role = '') 
-AND admin_id > 0;  -- This uses the primary key
-
-SET SQL_SAFE_UPDATES = 0;
-
--- 2. Update roles
-UPDATE adopters SET role = 'USER' WHERE role IS NULL OR role = '';
-UPDATE admins SET role = 'ADMIN' WHERE role IS NULL OR role = '';
-
--- Check if it has the right columns
-SHOW COLUMNS FROM users;
-SELECT COUNT(*) as total_users FROM users;
-SELECT * FROM users LIMIT 5;
-
--- If users table is empty, populate it
-INSERT INTO users (name, email, password, role)
-SELECT name, email, password_hash, 'ADMIN' 
-FROM admins;
-
-INSERT INTO users (name, email, password, role)
-SELECT name, email, password_hash, 'USER'
-FROM adopters;
-
--- Make sure admin emails have ADMIN role
-UPDATE users 
-SET role = 'ADMIN' 
-WHERE email LIKE '%admin%' OR email LIKE '%@petsystem.com';
-
--- Make sure others have USER role
-UPDATE users 
-SET role = 'USER' 
-WHERE role IS NULL OR role = '' 
-AND (email NOT LIKE '%admin%' AND email NOT LIKE '%@petsystem.com');
-
--- Check users with roles
-SELECT id, name, email, role FROM users ORDER BY role DESC;
-
--- Test specific users
-SELECT * FROM users WHERE email = 'rohit.admin@petsystem.com';
--- Should show role: 'ADMIN'
-
-SELECT * FROM users WHERE email = 'utkarsh@example.com';
--- Should show role: 'USER'
-
--- 1. First check if users table has correct structure
-DESCRIBE users;
-
--- 2. Clear table if needed
-TRUNCATE TABLE users;
-
--- 3. Insert admins as ADMIN role
-INSERT INTO users (name, email, password, role)
-SELECT name, email, password_hash, 'ADMIN' 
-FROM admins;
-
--- 4. Insert adopters as USER role
-INSERT INTO users (name, email, password, role)
-SELECT a.name, a.email, a.password_hash, 'USER'
-FROM adopters a
-WHERE a.email NOT IN (SELECT email FROM users);
-
-
--- 5. Verify - Should show users with roles
-SELECT id, name, email, role FROM users;
-
-
--- Create a test admin with known password (password: 123456)
-INSERT INTO users (name, email, password, role) 
-VALUES ('Test Admin', 'admin@test.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeKbB3XJk.F1Q4gFqJx4fJYF7J2qX4W9y', 'ADMIN');
-
--- Create a test user with known password (password: 123456)  
-INSERT INTO users (name, email, password, role) 
-VALUES ('Test User', 'user@test.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeKbB3XJk.F1Q4gFqJx4fJYF7J2qX4W9y', 'USER');
-
-CREATE TABLE otp_verification (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    email VARCHAR(255) NOT NULL,
-    otp VARCHAR(10) NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    expires_at DATETIME NOT NULL,
-    verified BOOLEAN DEFAULT FALSE
-);
-
-
-ALTER TABLE otp_verification 
-CHANGE expires_at expiry_time DATETIME;
-
-SELECT * FROM otp_verification ORDER BY created_at DESC;
-
-select * from otp_verification order by created_at desc;
-
-SELECT * FROM otp_verification ORDER BY created_at DESC;
-
-SELECT DATABASE();
-
-USE pet_adoption_and_tracking;
-SELECT * FROM otp_verification;
-
-select * from users;
-
-
--- Reset passwords for existing admins to '123456'
-UPDATE users 
-SET password = '$2a$10$N9qo8uLOickgx2ZMRZoMyeKbB3XJk.F1Q4gFqJx4fJYF7J2qX4W9y' 
-WHERE email IN ('rohit.admin@petsystem.com', 'sneha.admin@petsystem.com');
-
--- Verify
-SELECT name, email, role FROM users WHERE role = 'ADMIN';
-
-UPDATE users
-SET role = 'ADMIN'
+-- Update with CORRECT hash
+UPDATE admins SET password_hash = '$2a$10$D84XmtyQhEeKSsplsoSSN.DcJ59b2GPx2HjbyK.wtTvG7lWRZSlsW'
 WHERE email = 'satyampatelkatni2003@gmail.com';
 
-SELECT email, role FROM users WHERE email='satyampatelkatni2003@gmail.com';
-
-UPDATE users
-SET role = 'ADMIN'
-WHERE email = 'satyampateler@gmail.com';
-
-
-SELECT email, role FROM users WHERE email='satyampateler@gmail.com';
-
-show tables;
-
-select * from admins;
-
--- Add a test admin with password: admin123
-INSERT INTO users (name, email, password, role) 
-VALUES ('System Admin', 'admin@petadoption.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeKbB3XJk.F1Q4gFqJx4fJYF7J2qX4W9y', 'ADMIN');
-
--- Verify admin users
-SELECT id, name, email, role FROM users WHERE role = 'ADMIN';
-
-USE pet_adoption_and_tracking;
-
-SELECT id, name, email, role FROM users;
-
-SELECT * FROM users WHERE email = 'satyampatelkatni2003@gmail.com';
-
-SELECT id, name, email, role FROM users;
-
-
-show tables;
-
-select * from admins;
-
-UPDATE admins
-SET password_hash = '$2a$10$N9qo8uLOickgx2ZMRZoMyeKbB3XJk.F1Q4gFqJx4fJYF7J2qX4W9y'
-WHERE email IN ('rohit.admin@petsystem.com',
-                'sneha.admin@petsystem.com',
-                'admin@petadoption.com');
-                
-INSERT INTO admins (name, email, password_hash, role)
-VALUES (
-    'System Admin',
-    'admin@petsystem.com',
-    '$2a$10$N9qo8uLOickgx2ZMRZoMyeKbB3XJk.F1Q4gFqJx4fJYF7J2qX4W9y',
-    'ADMIN'
-);
-
-
-INSERT INTO users (name, email, password, role)
-VALUES (
-  'Satyam Patel',
-  'satyampatelkatni2003@gmail.com',
-  '$2a$10$N9qo8uLOickgx2ZMRZoMyeKbB3XJk.F1Q4gFqJx4fJYF7J2qX4W9y',
-  'ADMIN'
-);
-
-SELECT id, name, email, role, password
-FROM users
+UPDATE users SET password = '$2a$10$D84XmtyQhEeKSsplsoSSN.DcJ59b2GPx2HjbyK.wtTvG7lWRZSlsW'
 WHERE email = 'satyampatelkatni2003@gmail.com';
 
-UPDATE admins
-SET password_hash = '$2a$10$N9qo8uLOickgx2ZMRZoMyeKbB3XJk.F1Q4gFqJx4fJYF7J2qX4W9y'
-WHERE email IN (
-    'rohit.admin@petsystem.com',
-    'sneha.admin@petsystem.com',
-    'admin@petadoption.com',
-    'admin@petsystem.com'
-);
-
-SELECT email, password_hash FROM admins;
-
-select * from admins;
-
-SELECT email, password_hash, LENGTH(password_hash) as len FROM admins;
-
-SELECT 
-    email, 
-    password_hash, 
-    LENGTH(password_hash) as length,
-    LEFT(password_hash, 30) as first_part,
-    RIGHT(password_hash, 30) as last_part
-FROM admins
-WHERE email = 'admin@petadoption.com';
-
--- Disable safe updates
-SET SQL_SAFE_UPDATES = 0;
-
--- Reset all admin passwords to "admin123"
-UPDATE admins 
-SET password_hash = '$2a$10$N9qo8uLOickgx2ZMRZoMyeKbB3XJk.F1Q4gFqJx4fJYF7J2qX4W9y';
-
--- Reset all admin user passwords to "admin123" 
-UPDATE users 
-SET password = '$2a$10$N9qo8uLOickgx2ZMRZoMyeKbB3XJk.F1Q4gFqJx4fJYF7J2qX4W9y'
-WHERE role = 'ADMIN';
-
--- Re-enable safe updates
-SET SQL_SAFE_UPDATES = 1;
-
--- Verify
-SELECT email, password_hash FROM admins;
-SELECT email, password, role FROM users WHERE role = 'ADMIN';
-
--- Check exact hash with hex representation
-SELECT 
-    email,
-    password_hash,
-    LENGTH(password_hash) as length,
-    HEX(password_hash) as hex_value,
-    password_hash = '$2a$10$N9qo8uLOickgx2ZMRZoMyeKbB3XJk.F1Q4gFqJx4fJYF7J2qX4W9y' as exact_match
-FROM admins;
-
--- Check for trailing spaces
-SELECT 
-    email,
-    CONCAT('"', password_hash, '"') as quoted_hash,
-    LENGTH(password_hash) as length,
-    CHAR_LENGTH(password_hash) as char_length
-FROM admins;
-
-UPDATE admin
-SET password_hash = '$2a$10$9nlbmOqEtEi8/JQYRpTmEuqq91wSYfcRY6x4KyETHdGStGmFv3Rm.'
-WHERE email = 'admin@petadoption.com';
-
-USE pet_adoption_and_tracking;
-
-SELECT admin_id, name, email, password_hash FROM admins;
-
-UPDATE admins
-SET password_hash = '$2a$10$9nlbmOqEtEi8/JQYRpTmEuqq91wSYfcRY6x4KyETHdGStGmFv3Rm.';
-
-UPDATE admins
-SET password_hash = '$2a$10$9nlbmOqEtEi8/JQYRpTmEuqq91wSYfcRY6x4KyETHdGStGmFv3Rm.'
-WHERE admin_id > 0;
-
-
-SELECT 
-  email,
-  password_hash,
-  LENGTH(password_hash),
-  HEX(password_hash)
-FROM admins
-WHERE email = 'admin@petadoption.com';
-
-SELECT id, name, email, password, role
-FROM users
-WHERE email = 'satyampatelkatni2003@gmail.com';
-
-UPDATE adopters
-SET password_hash = '$2a$10$9nlbmOqEtEi8/JQYRpTmEuqq91wSYfcRY6x4KyETHdGStGmFv3Rm.';
-
-
-UPDATE users
-SET password = '$2a$10$9nlbmOqEtEi8/JQYRpTmEuqq91wSYfcRY6x4KyETHdGStGmFv3Rm.'
-WHERE id > 0;
-
-SELECT id, email, LENGTH(password) FROM users;
-
-show tables;
-
-describe users;
-
-INSERT INTO users (name, email, password, role)
-SELECT name, email, password_hash, 'ADMIN'
-FROM admins;
-
-INSERT INTO users (name, email, password, role)
-SELECT name, email, password_hash, 'USER'
-FROM adopters
-WHERE email NOT IN (SELECT email FROM users);
-
-SELECT id, name, email, role FROM users;
-
-UPDATE users
-SET password = '$2a$10$9nlbmOqEtEi8/JQYRpTmEuqq91wSYfcRY6x4KyETHdGStGmFv3Rm.'
-WHERE id > 0;
-
-
-SELECT email, LENGTH(password) FROM users;
-
-
-UPDATE users
-SET password = '$2a$10$9nlbmOqEtEi8/JQYRpTmEuqq91wSYfcRY6x4KyETHdGStGmFv3Rm.'
-WHERE email = 'utkarsh@example.com';
-
-SELECT email, LENGTH(password)
-FROM users
-WHERE email = 'utkarsh@example.com';
-
-show tables;
-DESCRIBE users;
-
-UPDATE users
-SET password = '$2a$10$9nlbmOqEtEi8/JQYRpTmEuqq91wSYfcRY6x4KyETHdGStGmFv3Rm.'
-WHERE id > 0;
-
-SELECT email, LENGTH(password) FROM users;
-
-SELECT email, password FROM users;
-
-SET SQL_SAFE_UPDATES = 0;
-
-UPDATE users 
-SET password = '$2a$10$N9qo8uLOickgx2ZMRZoMyeKbB3XJk.F1Q4gFqJx4fJYF7J2qX4W9y'
-WHERE email IS NOT NULL;
-
-SET SQL_SAFE_UPDATES = 1;
-
-SELECT email, password FROM users;
-
-SET SQL_SAFE_UPDATES = 0;
-
-UPDATE users
-SET password = '$2a$10$5sjG8zvtHyWDdNd0fhugPu76dnWnqqZGtWQBi07M0Q..6/Td6duQO';
-
-SET SQL_SAFE_UPDATES = 1;
-USE pet_adoption_and_tracking;
-
-SELECT email, password FROM users;
-
-select * from pets;
-
-SET @a = 1;
-select @a;
-
-set @a = 5, @b = 6;
-select @a + @b;
-
-
-INSERT INTO pet 
-(name, category, breed, age, gender, status, image_url)
-VALUES
-
-('Cat One','cat','indian',2,'F','available','1718906085691-433161642.jpeg'),
-
-('Cat Two','cat','persian',1,'M','available','1718906182775-8078205.jpeg'),
-
-('Cat Three','cat','street',3,'F','available','1718906255938-952635839.jpeg'),
-
-('Dog Bruno','dog','labrador',2,'M','available','1718906386213-550689756.jpg'),
-
-('Dog Rocky','dog','german shepherd',3,'M','available','1718906473944-923464963.jpg'),
-
-('Dog Jimmy','dog','indian',1,'F','available','1718906531802-606585739.jpg'),
-
-('Rabbit White','rabbit','normal',1,'F','available','1718906609733-573010075.jpg'),
-
-('Rabbit Brown','rabbit','normal',2,'M','available','1718906666835-21470791.jpeg'),
-
-('Rabbit Cute','rabbit','normal',1,'F','available','1718906728622-949628877.jpeg'),
-
-('Fish Goldy','fish','goldfish',1,'M','available','1718906809727-756049182.jpg'),
-
-('Fish Nemo','fish','clown',1,'M','available','1718906865077-840488064.jpg'),
-
-('Fish Blue','fish','aquarium',1,'F','available','1718906922560-440283942.jpg'),
-
-('Bird Sparrow','bird','sparrow',1,'M','available','1718906991558-261228787.jpg'),
-
-('Bird Pigeon','bird','pigeon',1,'F','available','1718907035908-804370403.jpg'),
-
-('Parrot Green','parrot','parrot',1,'M','available','1718907085550-787999544.jpg'),
-
-('Cat Extra1','cat','indian',2,'F','available','1719079003718-487030209.jpg'),
-
-('Cat Extra2','cat','persian',2,'M','available','1719079052044-631328966.jpg');
-
-Select * from pet;
-
-Delete from pet;
-
-SET SQL_SAFE_UPDATES = 0;
-
-Truncate Table pet;
-
-SET SQL_SAFE_UPDATES = 1;
-
-use pet_adoption_and_tracking;
-SELECT * FROM adoption_requests;
-
-select * from pets_pending;
-
-
-USE pet_adoption_and_tracking;
-
--- 1. Drop the old adoption_requests table
-DROP TABLE IF EXISTS adoption_requests;
-
--- 2. Create the NEW adoption_requests table
-CREATE TABLE adoption_requests (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    pet_id BIGINT NOT NULL,
-    pet_name VARCHAR(100),
-    pet_breed VARCHAR(100),
-    pet_age INT,
-    pet_category VARCHAR(50),
-    pet_image VARCHAR(255),
-    email VARCHAR(255) NOT NULL,
-    phone_no VARCHAR(20),
-    living_situation TEXT,
-    previous_experience TEXT,
-    family_composition TEXT,
-    status VARCHAR(20) DEFAULT 'PENDING',
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    updated_at DATETIME,
-    FOREIGN KEY (pet_id) REFERENCES pet(id) ON DELETE CASCADE
-);
-
--- 3. Verify the new table structure
-DESCRIBE adoption_requests;
-
--- 4. Check if it's empty (should be)
-SELECT * FROM adoption_requests;
-
-INSERT INTO adoption_requests 
-(pet_id, pet_name, pet_breed, pet_age, pet_category, pet_image, email, phone_no, status)
-VALUES 
-(1, 'Bruno', 'Labrador', 3, 'dog', 'images/bruno.jpg', 'test@example.com', '1234567890', 'PENDING');
-
--- Drop old triggers that reference the old table structure
-DROP TRIGGER IF EXISTS trg_update_pet_status_after_request;
-DROP TRIGGER IF EXISTS trg_set_decision_date;
-
--- Drop old stored procedures
-DROP PROCEDURE IF EXISTS submit_adoption_request;
-DROP PROCEDURE IF EXISTS approve_adoption_request;
-DROP PROCEDURE IF EXISTS reject_adoption_request;
-DROP PROCEDURE IF EXISTS get_pending_requests;
-
-DESCRIBE adoption_requests;
-
-DESCRIBE pet;
-
-SELECT 
-    CONSTRAINT_NAME,
-    TABLE_NAME,
-    COLUMN_NAME,
-    REFERENCED_TABLE_NAME,
-    REFERENCED_COLUMN_NAME
-FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
-WHERE TABLE_NAME = 'adoption_requests' 
-AND CONSTRAINT_SCHEMA = 'pet_adoption_and_tracking';
-
-SELECT * FROM adoption_requests ORDER BY created_at DESC LIMIT 5;
-
-select * from users;
-
-select * from adoption_requests;
-
-DESCRIBE admins;
-
--- Insert admin user (password will be 'admin123')
-INSERT INTO admins (name, email, password_hash, role) 
-VALUES (
-    'System Admin',
-    'admin@petadoptionn.com',
-    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy',
-    'ADMIN'
-);
-
--- Verify it was inserted
-SELECT * FROM admins;
-
-USE pet_adoption_and_tracking;
-
--- 1. Update admin passwords to 'admin123'
-UPDATE admins 
-SET password_hash = '$2a$10$N9qo8uLOickgx2ZMRZoMyeKbB3XJk.F1Q4gFqJx4fJYF7J2qX4W9y'
-WHERE admin_id > 0;
-
--- 2. Verify admins table has 'role' column
-ALTER TABLE admins ADD COLUMN IF NOT EXISTS role VARCHAR(20) DEFAULT 'ADMIN';
-
-select * from Admins;
-Describe Admins;
--- 3. Verify pet table structure
-DESCRIBE pet;
-
--- 4. If pets don't have correct status, update them
-UPDATE pet SET status = 'available' WHERE status IS NULL OR status = '';
-
--- 5. Check adoption_requests table
-SELECT * FROM adoption_requests ORDER BY created_at DESC LIMIT 10;
-
-USE pet_adoption_and_tracking;
-
-CREATE TABLE IF NOT EXISTS pets_pending (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    email VARCHAR(100) NOT NULL,
-    category VARCHAR(50) NOT NULL,
-    breed VARCHAR(50),
-    age INT,
-    gender CHAR(1),
-    location VARCHAR(100),
-    description TEXT,
-    phone VARCHAR(20),
-    image_path VARCHAR(255),
-    status VARCHAR(20) DEFAULT 'pending',
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-);
-
--- Verify table
-DESCRIBE pets_pending;
-
-
-USE pet_adoption_and_tracking;
-
-SELECT * FROM pets_pending ORDER BY created_at DESC LIMIT 5;
-
-
-USE pet_adoption_and_tracking;
-
-SELECT admin_id, name, email, password_hash, role 
+UPDATE users SET password = '$2a$10$D84XmtyQhEeKSsplsoSSN.DcJ59b2GPx2HjbyK.wtTvG7lWRZSlsW'
+WHERE email = 'user@test.com';
+
+UPDATE pet
+SET category = 'rabbit',
+    breed = 'Cottontail'
+WHERE id = 6;
+
+-- Verify (should show 60 characters)
+SELECT email, password_hash, LENGTH(password_hash) as len
 FROM admins 
-WHERE email = 'admin@petadoption.com';
-
-
-
-
-USE pet_adoption_and_tracking;
-
--- Update the admin password to admin123
-UPDATE admins 
-SET password_hash = '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy'
-WHERE email = 'admin@petadoption.com';
-
--- Verify it updated
+WHERE email = 'satyampatelkatni2003@gmail.com';
+select * from users;
+-- Verify the update
 SELECT 
-    admin_id, 
-    name, 
-    email, 
-    password_hash,
-    LENGTH(password_hash) as hash_length
-FROM admins 
-WHERE email = 'admin@petadoption.com';
+    id,
+    name,
+    email,
+    role,
+    LEFT(password, 20) AS password_preview,
+    LENGTH(password) AS password_length
+FROM users 
+WHERE email = 'satyampatelkatni2003@gmail.com';
 
-
-USE pet_adoption_and_tracking;
-
--- Delete ALL admins
-
-SET SQL_SAFE_UPDATES = 0;
-
-
-DELETE FROM admins;
-
-SET SQL_SAFE_UPDATES = 1;
-
-SELECT * FROM admins;
-
-
--- Insert fresh admin with CORRECT hash for password 'admin123'
-INSERT INTO admins (name, email, password_hash, role, created_at)
-VALUES (
-    'System Admin',
-    'admin@petadoption.com',
-    '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy',
-    'ADMIN',
-    NOW()
-);
-
--- Verify the hash
 SELECT 
     admin_id,
     name,
     email,
-    password_hash,
     role,
-    LENGTH(password_hash) as hash_length
+    LEFT(password_hash, 20) AS hash_preview,
+    LENGTH(password_hash) AS hash_length
+FROM admins 
+WHERE email = 'satyampatelkatni2003@gmail.com';
+
+-- Should show:
+-- password_length: 60
+-- hash_length: 60
+-- Both starting with: $2a$10$dXJ3SW6G7P9w...
+
+-- Step 7: Verify everything is created
+SHOW TABLES;
+SHOW TRIGGERS;
+SHOW PROCEDURE STATUS WHERE Db = 'pet_adoption_and_tracking_management_system';
+
+DESCRIBE adoption_requests;
+
+SELECT 
+    email, 
+    LEFT(password_hash, 30) AS hash_preview,
+    LENGTH(password_hash) AS hash_length
+FROM admins 
+WHERE email = 'satyampatelkatni2003@gmail.com';
+
+SHOW TRIGGERS LIKE 'adoption_requests';
+
+-- Check if adoption request was created
+SELECT 
+    ar.id,
+    ar.user_id,
+    ar.pet_id,
+    u.name AS user_name,
+    u.email AS user_email,
+    p.name AS pet_name,
+    ar.status
+FROM adoption_requests ar
+JOIN users u ON ar.user_id = u.id
+JOIN pet p ON ar.pet_id = p.id;
+
+-- Should show your adoption request with:
+-- user_id: 3
+-- pet_id: 1
+-- user_name: Rahul
+-- pet_name: Bruno
+-- status: PENDING
+
+SELECT '✅ Database structure updated successfully!' AS Status;
+
+SHOW TRIGGERS;
+SHOW PROCEDURE STATUS
+WHERE Db = 'pet_adoption_and_tracking_management_system';
+
+-- ========================================
+-- 6. VERIFICATION
+-- ========================================
+
+-- Show all tables
+SHOW TABLES;
+
+-- Show all triggers
+SHOW TRIGGERS;
+
+-- Show all procedures
+SHOW PROCEDURE STATUS WHERE Db = 'pet_adoption_and_tracking_management_system';
+
+-- Verify data counts
+SELECT 'Shelters:' AS Table_Name, COUNT(*) AS Count FROM shelters
+UNION ALL SELECT 'Admins:', COUNT(*) FROM admins
+UNION ALL SELECT 'Users:', COUNT(*) FROM users
+UNION ALL SELECT 'Pets:', COUNT(*) FROM pet
+UNION ALL SELECT 'Pending Pets:', COUNT(*) FROM pets_pending
+UNION ALL SELECT 'Adoption Requests:', COUNT(*) FROM adoption_requests
+UNION ALL SELECT 'Tracking:', COUNT(*) FROM tracking;
+
+USE pet_adoption_and_tracking_management_system;
+
+-- Replace 'YOUR_COPIED_HASH_HERE' with the hash from step 3
+
+UPDATE admins SET password_hash = '$2a$10$jgD28GNebu2/zJDxc8fHTegkLSic9V.hNM.6roJS9jflQF.gZbkf6'
+WHERE email = 'satyampatelkatni2003@gmail.com';
+
+UPDATE users SET password = '$2a$10$jgD28GNebu2/zJDxc8fHTegkLSic9V.hNM.6roJS9jflQF.gZbkf6'
+WHERE email = 'satyampatelkatni2003@gmail.com';
+
+-- Verify
+SELECT email, LEFT(password_hash, 30) as hash_preview, LENGTH(password_hash) as len
+FROM admins 
+WHERE email = 'satyampatelkatni2003@gmail.com';
+
+-- Insert test tracking record for an adopted pet
+INSERT INTO tracking (pet_id, location, note, vet_visit_date, vaccinated, updated_at)
+VALUES (1, 'Mumbai', 'General health check-up', '2026-01-20', TRUE, NOW());
+
+-- Verify
+SELECT * FROM tracking;
+
+SELECT COUNT(*) FROM pets_pending WHERE status = 'pending';
+SELECT COUNT(*) FROM adoption_requests WHERE status = 'PENDING';
+SELECT COUNT(*) FROM pet WHERE status = 'available';
+
+
+SELECT COUNT(*) FROM adoption_requests WHERE status = 'PENDING';
+
+-- View all tracking records
+SELECT * FROM tracking ORDER BY updated_at DESC;
+
+-- View tracking for specific pet
+SELECT 
+    t.*,
+    p.name as pet_name,
+    p.category,
+    p.breed
+FROM tracking t
+JOIN pet p ON t.pet_id = p.id
+WHERE t.pet_id = 1;
+
+-- Count tracking records per pet
+SELECT 
+    p.name,
+    COUNT(t.track_id) as tracking_count
+FROM pet p
+LEFT JOIN tracking t ON p.id = t.pet_id
+WHERE p.status = 'adopted'
+GROUP BY p.id, p.name;
+
+-- Get vaccination statistics
+SELECT 
+    COUNT(*) as total_records,
+    SUM(CASE WHEN vaccinated = TRUE THEN 1 ELSE 0 END) as vaccinated_count,
+    SUM(CASE WHEN vaccinated = FALSE THEN 1 ELSE 0 END) as not_vaccinated_count
+FROM tracking;
+
+-- Recent tracking activities
+SELECT 
+    t.track_id,
+    p.name as pet_name,
+    t.location,
+    t.note,
+    t.vaccinated,
+    t.updated_at
+FROM tracking t
+JOIN pet p ON t.pet_id = p.id
+ORDER BY t.updated_at DESC
+LIMIT 10;
+
+-- How many pending submissions?
+SELECT COUNT(*) FROM pets_pending WHERE status = 'pending';
+
+-- How many adoption requests?
+SELECT COUNT(*) FROM adoption_requests WHERE status = 'pending';
+
+-- How many available pets?
+SELECT COUNT(*) FROM pet WHERE status = 'available';
+
+-- During admin operations:
+SELECT * FROM pets_pending WHERE status = 'pending';
+SELECT * FROM adoption_requests WHERE status = 'pending';
+
+-- To check data:
+SELECT * FROM pet;
+SELECT * FROM users;
+
+-- To get stats:
+SELECT status, COUNT(*) FROM pet GROUP BY status;
+SELECT status, COUNT(*) FROM pets_pending GROUP BY status;
+
+-- Show system overview
+SELECT 
+    (SELECT COUNT(*) FROM users) as total_users,
+    (SELECT COUNT(*) FROM pet WHERE status = 'available') as available_pets,
+    (SELECT COUNT(*) FROM adoption_requests WHERE status = 'pending') as pending_requests;
+
+-- Show recent activity
+SELECT * FROM pet ORDER BY created_at DESC LIMIT 5;
+SELECT * FROM pets_pending ORDER BY created_at DESC LIMIT 5;
+
+-- Monitoring by these queries ===========================
+
+-- View all pets
+SELECT * FROM pet;
+
+-- View all pending pet submissions
+SELECT * FROM pets_pending;
+
+-- View all adoption requests
+SELECT * FROM adoption_requests;
+
+-- View all users
+SELECT * FROM users;
+
+-- View all admins
+SELECT * FROM admins;
+
+-- View all shelters
+SELECT * FROM shelters;
+
+-- ========================================
+-- 2. DETAILED PET INFORMATION
+-- ========================================
+
+-- All pets with details
+SELECT 
+    id AS pet_id,
+    name,
+    breed,
+    age,
+    gender,
+    status,
+    image_url,
+    shelter_id,
+    created_at
+FROM pet
+ORDER BY created_at DESC;
+
+-- Available pets only
+SELECT * FROM pet WHERE status = 'available';
+
+-- Pending pets only
+SELECT * FROM pet WHERE status = 'pending';
+
+-- Adopted pets only
+SELECT * FROM pet WHERE status = 'adopted';
+
+-- Count pets by status
+SELECT 
+    status, 
+    COUNT(*) as count 
+FROM pet
+GROUP BY status;
+
+-- Count pets by category (requires adding category column)
+-- If you don't have category in pets table, skip this
+-- SELECT category, COUNT(*) as count FROM pets GROUP BY category;
+
+-- ========================================
+-- 3. PENDING PET SUBMISSIONS (User Posted Pets)
+-- ========================================
+
+-- All pending submissions
+SELECT * FROM pets_pending ORDER BY created_at DESC;
+
+-- Only pending (not approved/rejected)
+SELECT 
+    id,
+    name as owner_name,
+    email,
+    category,
+    breed,
+    age,
+    gender,
+    location,
+    phone,
+    status,
+    image_path,
+    created_at
+FROM pets_pending 
+WHERE status = 'pending'
+ORDER BY created_at DESC;
+
+-- Approved submissions
+SELECT * FROM pets_pending WHERE status = 'approved';
+
+-- Rejected submissions
+SELECT * FROM pets_pending WHERE status = 'rejected';
+
+-- Count pending submissions by status
+SELECT 
+    status, 
+    COUNT(*) as count 
+FROM pets_pending 
+GROUP BY status;
+
+-- Recent submissions (last 24 hours)
+SELECT * FROM pets_pending 
+WHERE created_at >= DATE_SUB(NOW(), INTERVAL 24 HOUR)
+ORDER BY created_at DESC;
+
+-- ========================================
+-- 4. ADOPTION REQUESTS
+-- ========================================
+
+-- All adoption requests
+SELECT 
+    id,
+    user_id,
+    pet_id,
+    status,
+    created_at,
+    updated_at
+FROM adoption_requests
+WHERE status = 'PENDING'
+ORDER BY created_at DESC;
+
+--  performing join operations of admin with user and pet details
+SELECT 
+    ar.id AS request_id,
+    u.id AS user_id,
+    u.name AS user_name,
+    u.email AS user_email,
+    p.id AS pet_id,
+    p.name AS pet_name,
+    p.breed,
+    p.age,
+    ar.status,
+    ar.created_at
+FROM adoption_requests ar
+JOIN users u ON ar.user_id = u.id
+JOIN pet p ON ar.pet_id = p.id
+ORDER BY ar.created_at DESC;
+
+-- Adoption requests
+select * from adoption_requests;
+
+-- Approved requests
+SELECT * FROM adoption_requests WHERE status = 'approved';
+
+-- Rejected requests
+SELECT * FROM adoption_requests WHERE status = 'rejected';
+
+-- Count requests by status
+SELECT 
+    status, 
+    COUNT(*) as count 
+FROM adoption_requests 
+GROUP BY status;
+
+-- ========================================
+-- 5. ADMIN & USER INFORMATION
+-- ========================================
+
+-- All admins
+SELECT 
+    admin_id,
+    name,
+    email,
+    role,
+    created_at
 FROM admins;
 
+-- All users
+SELECT 
+    id,
+    name,
+    email,
+    role,
+    created_at
+FROM users
+ORDER BY created_at DESC;
 
-UPDATE admins
-SET password_hash = '$2a$10$P3E6zxm0wihobGpab2/aBOJW3r3SDFX80acLo36gKIMZj9BpninOC'
-WHERE email = 'admin@petadoption.com';
+-- Users by role
+SELECT role, COUNT(*) as count FROM users GROUP BY role;
+
+-- Recent user signups (last 7 days)
+SELECT * FROM users 
+WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+ORDER BY created_at DESC;
+
+-- ========================================
+-- 6. SHELTER INFORMATION
+-- ========================================
+
+-- All shelters
+SELECT * FROM shelters;
+
+-- Pets per shelter
+SELECT 
+    s.shelter_id,
+    s.name AS shelter_name,
+    COUNT(p.id) AS pet_count
+FROM shelters s
+LEFT JOIN pet p ON s.shelter_id = p.shelter_id
+GROUP BY s.shelter_id, s.name;
 
 
+-- ========================================
+-- 7. COMBINED QUERIES (Detailed Views)
+-- ========================================
 
-describe pets;
-SELECT id, name, filename, image
-FROM pets;
+-- Adoption requests with pet details
+SELECT 
+    ar.id AS request_id,
+    ar.pet_id,
+    p.name AS pet_name,
+    p.breed AS pet_breed,
+    p.age AS pet_age,
+    ar.status,
+    ar.created_at,
+    ar.updated_at
+FROM adoption_requests ar
+JOIN pet p ON ar.pet_id = p.id
+ORDER BY ar.created_at DESC;
+
+-- Adoption requests with pet+shleter+user
+
+SELECT 
+    ar.id AS request_id,
+
+    u.id AS user_id,
+    u.name AS user_name,
+    u.email AS user_email,
+
+    p.id AS pet_id,
+    p.name AS pet_name,
+    p.breed,
+    p.age,
+    p.status AS pet_status,
+
+    s.shelter_id,
+    s.name AS shelter_name,
+    s.address AS shelter_address,
+
+    ar.status AS request_status,
+    ar.created_at
+FROM adoption_requests ar
+JOIN users u ON ar.user_id = u.id
+JOIN pet p ON ar.pet_id = p.id
+LEFT JOIN shelters s ON p.shelter_id = s.shelter_id
+ORDER BY ar.created_at DESC;
 
 
-select * from pets;
+-- Pets with shelter information
+SELECT 
+    p.id AS pet_id,
+    p.name AS pet_name,
+    p.breed,
+    p.age,
+    p.status,
+    s.name AS shelter_name,
+    s.address AS shelter_address
+FROM pet p
+LEFT JOIN shelters s ON p.shelter_id = s.shelter_id
+ORDER BY p.created_at DESC;
 
 
+-- Pending submissions with complete details
+SELECT 
+    pp.id,
+    pp.name as owner_name,
+    pp.email as owner_email,
+    pp.phone as owner_phone,
+    pp.category as pet_category,
+    pp.breed as pet_breed,
+    pp.age as pet_age,
+    pp.gender as pet_gender,
+    pp.location,
+    pp.description as reason,
+    pp.status,
+    pp.image_path,
+    pp.created_at
+FROM pets_pending pp
+WHERE pp.status = 'pending'
+ORDER BY pp.created_at DESC;
 
--- Check what's currently stored
-SELECT image_url FROM pets LIMIT 3;
-SELECT image_path FROM pets_pending LIMIT 3;
+-- ========================================
+-- 8. STATISTICS & ANALYTICS
+-- ========================================
 
+-- Overall system stats
+SELECT 
+    (SELECT COUNT(*) FROM users) as total_users,
+    (SELECT COUNT(*) FROM pet WHERE status = 'available') as available_pets,
+    (SELECT COUNT(*) FROM adoption_requests WHERE status = 'pending') as pending_requests,
+    (SELECT COUNT(*) FROM adoption_requests WHERE status = 'approved') as total_adoptions,
+    (SELECT COUNT(*) FROM pets_pending WHERE status = 'pending') as pending_submissions;
+
+-- Daily activity (last 7 days)
+SELECT 
+    DATE(created_at) as date,
+    COUNT(*) as new_pets
+FROM pet
+WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+GROUP BY DATE(created_at)
+ORDER BY date DESC;
+
+-- Monthly adoption stats
+SELECT 
+    DATE_FORMAT(created_at, '%Y-%m') AS month,
+    COUNT(*) AS total_requests,
+    SUM(CASE WHEN status = 'APPROVED' THEN 1 ELSE 0 END) AS approved,
+    SUM(CASE WHEN status = 'REJECTED' THEN 1 ELSE 0 END) AS rejected
+FROM adoption_requests
+WHERE created_at >= DATE_SUB(NOW(), INTERVAL 6 MONTH)
+GROUP BY DATE_FORMAT(created_at, '%Y-%m')
+ORDER BY month DESC;
+
+
+-- ========================================
+-- 9. SEARCH QUERIES
+-- ========================================
+
+-- Search pets by name
+SELECT * FROM pet WHERE name LIKE '%Bruno%';
+
+-- Search pets by breed
+SELECT * FROM pet WHERE breed LIKE '%Labrador%';
+
+-- Search users by email
+SELECT * FROM users WHERE email LIKE '%example.com%';
+
+-- Search pending submissions by owner name
+SELECT * FROM pets_pending WHERE name LIKE '%Satyam%';
+
+-- ========================================
+-- 10. RECENT ACTIVITY
+-- ========================================
+
+-- Last 10 pets added
+SELECT * FROM pet ORDER BY created_at DESC LIMIT 10;
+
+-- Last 10 adoption requests
+SELECT * 
+FROM adoption_requests 
+ORDER BY created_at DESC 
+LIMIT 10;
+
+
+-- Last 10 user signups
+SELECT * FROM users ORDER BY created_at DESC LIMIT 10;
+
+-- Last 10 pending submissions
+SELECT * FROM pets_pending ORDER BY created_at DESC LIMIT 10;
+
+-- ========================================
+-- 11. DATA CLEANUP QUERIES (Use Carefully!)
+-- ========================================
+
+-- View OTP entries (for debugging signup issues)
+SELECT * FROM otp_verification ORDER BY created_at DESC LIMIT 10;
+
+-- Clean expired OTPs
 SET SQL_SAFE_UPDATES = 0;
 
--- If you see full paths like "D:\...\image.jpg", fix them:
-UPDATE pets 
-SET image_url = SUBSTRING_INDEX(image_url, '\\', -1)
-WHERE image_url LIKE '%\\%';
-
-UPDATE pets_pending 
-SET image_path = SUBSTRING_INDEX(image_path, '\\', -1)
-WHERE image_path LIKE '%\\%';
+DELETE FROM otp_verification
+WHERE expiry_time < NOW() AND verified = FALSE;
 
 SET SQL_SAFE_UPDATES = 1;
 
 
-select image_url from pets;
+-- View pets with missing images
+SELECT * FROM pet WHERE image_url IS NULL OR image_url = '';
 
+-- View pending submissions with missing images
+SELECT * FROM pets_pending WHERE image_path IS NULL OR image_path = '';
+
+-- ========================================
+-- 12. VERIFICATION QUERIES (For Testing)
+-- ========================================
+
+-- Check if specific pet exists
+SELECT * FROM pet WHERE pet_id = 1;
+
+-- Check if specific user exists
+SELECT * FROM users WHERE email = 'satyampatelkatni2003@gmail.com';
+
+
+-- Verify admin password hash
+SELECT 
+    email, 
+    password_hash,
+    LENGTH(password_hash) as hash_length
+FROM admins 
+WHERE email = 'satyampatelkatni2003@.com';
+
+-- ========================================
+-- 13. QUICK STATUS CHECKS
+-- ========================================
+
+-- Are there pending submissions to review?
+SELECT COUNT(*) as pending_count 
+FROM pets_pending 
+WHERE status = 'pending';
+
+-- Are there pending adoption requests?
+SELECT COUNT(*) as pending_requests 
+FROM adoption_requests 
+WHERE status = 'pending';
+
+-- How many available pets?
+SELECT COUNT(*) as available_pets 
+FROM pet
+WHERE status = 'available';
+
+-- ========================================
+-- 14. IMAGE PATH QUERIES
+-- ========================================
+
+-- Check pet image paths
+SELECT id as  pet_id, name, image_url FROM pet;
+
+-- Check pending pet image paths
+SELECT id, name, image_path FROM pets_pending;
+
+-- Find pets with full paths (need fixing)
+SELECT * FROM pet WHERE image_url LIKE '%\\%' OR image_url LIKE '%/%';
+
+-- Find pending pets with full paths
+SELECT * FROM pets_pending WHERE image_path LIKE '%\\%' OR image_path LIKE '%/%';
+
+-- ========================================
+-- 15. SPECIFIC USER/PET LOOKUP
+-- ========================================
+
+-- Get all info for a specific pet
+SELECT * FROM pet WHERE id = 1;
+
+-- Get all adoption requests for a specific pet
+SELECT * FROM adoption_requests WHERE pet_id = 1;
+
+-- Get all submissions from a specific user
+SELECT * FROM pets_pending WHERE email = 'satyampatelkatni2003@gmail.com';
+
+-- Get specific adoption request with full details
+SELECT 
+    ar.*,
+    p.name AS pet_name,
+    p.breed AS pet_breed,
+    p.image_url AS pet_image
+FROM adoption_requests ar
+LEFT JOIN pet p ON ar.pet_id = p.id
+WHERE ar.id = 1;
+
+
+-- doing operations things from my side
+
+select * from users;
+-- ========================================
+-- END OF MONITORING QUERIES
+-- ========================================
+
+/*
+QUICK REFERENCE:
+
+Most Used:
+- SELECT * FROM pets;
+- SELECT * FROM pets_pending WHERE status = 'pending';
+- SELECT * FROM adoption_requests WHERE status = 'pending';
+- SELECT * FROM users;
+
+For Admin Dashboard:
+- Total users: SELECT COUNT(*) FROM users;
+- Available pets: SELECT COUNT(*) FROM pets WHERE status = 'available';
+- Pending requests: SELECT COUNT(*) FROM adoption_requests WHERE status = 'pending';
+- Total adoptions: SELECT COUNT(*) FROM adoption_requests WHERE status = 'approved';
+*/
+
+-- ========================================
+-- 7. ADMIN CREDENTIALS
+-- ========================================
+/*
+Email: admin@petadoption.com
+Password: admin123
+
+BCrypt Hash: $2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy
+*/
+
+-- ========================================
+-- 8. USAGE EXAMPLES
+-- ========================================
+
+-- Example 1: Submit an adoption request using procedure
+-- CALL submit_adoption_request(1, 'Bruno', 'Labrador', 3, 'dog', '1718906386213-550689756.jpg', 
+--      'user@example.com', '9876543210', 'Apartment', 'Yes, had dogs before', 'Family of 4');
+
+-- Example 2: Approve adoption request using procedure
+-- CALL approve_adoption_request(1);
+
+-- Example 3: Reject adoption request using procedure
+-- CALL reject_adoption_request(2);
+
+-- Example 4: Get all pending requests using procedure
+-- CALL get_pending_requests();
+
+-- ========================================
+-- 9. TESTING QUERIES
+-- ========================================
+
+-- Test trigger: Insert and update adoption request
+-- INSERT INTO adoption_requests (pet_id, pet_name, email, status) VALUES (1, 'Test Pet', 'test@test.com', 'PENDING');
+-- UPDATE adoption_requests SET status = 'APPROVED' WHERE pet_id = 1;
+-- SELECT status FROM pet WHERE id = 1; -- Should show 'adopted'
+
+-- ==================== CLEANUP SCRIPT (Run if needed) ====================
+
+-- To clean up dummy data from pets_pending:
+-- DELETE FROM pets_pending WHERE image_path LIKE '/uploads/%' OR image_path IS NULL;
+
+-- To reset all data:
+-- SET FOREIGN_KEY_CHECKS = 0;
+-- TRUNCATE TABLE adoption_requests;
+-- TRUNCATE TABLE pet;
+-- TRUNCATE TABLE pets_pending;
+-- TRUNCATE TABLE tracking;
+-- SET FOREIGN_KEY_CHECKS = 1;
