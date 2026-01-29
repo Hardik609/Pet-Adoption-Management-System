@@ -1,19 +1,52 @@
+//1
 import React, { useState } from 'react';
 import Dashboard from './Dashboard';
 import ApprovedRequests from './ApprovedRequests';
-import AdoptingRequests from './AdoptingRequests';
+import AdoptingRequests from './AdoptionRequests';
 import AdoptedHistory from './AdoptedHistory';
 import PendingPetsAdmin from './PendingPetsAdmin';
+import TrackingManagement from './TrackingManagement';
 
 const AdminScreen = () => {
   const [screen, setScreen] = useState('dashboard');
 
   const menuItems = [
-    { key: 'dashboard', label: 'Dashboard', icon: 'bi-speedometer2', color: 'primary' },
-    { key: 'pendingPets', label: 'Pending Pets', icon: 'bi-hourglass-split', color: 'warning' },
-    { key: 'approvedPets', label: 'Approved Pets', icon: 'bi-check-circle', color: 'success' },
-    { key: 'adoptionRequests', label: 'Adoption Requests', icon: 'bi-heart', color: 'danger' },
-    { key: 'adoptedHistory', label: 'Adopted History', icon: 'bi-clock-history', color: 'info' }
+    { 
+      key: 'dashboard', 
+      label: 'Dashboard', 
+      icon: 'bi-speedometer2', 
+      color: 'primary' 
+    },
+    { 
+      key: 'pendingPets', 
+      label: 'Pending Pets', 
+      icon: 'bi-hourglass-split', 
+      color: 'warning' 
+    },
+    { 
+      key: 'approvedPets', 
+      label: 'Approved Pets', 
+      icon: 'bi-check-circle', 
+      color: 'success' 
+    },
+    { 
+      key: 'adoptionRequests', 
+      label: 'Adoption Requests', 
+      icon: 'bi-heart', 
+      color: 'danger' 
+    },
+    { 
+      key: 'adoptedHistory', 
+      label: 'Adopted History', 
+      icon: 'bi-clock-history', 
+      color: 'info' 
+    },
+    { 
+      key: 'tracking', 
+      label: 'Pet Tracking', 
+      icon: 'bi-geo-alt', 
+      color: 'primary' 
+    }
   ];
 
   return (
@@ -57,6 +90,7 @@ const AdminScreen = () => {
             {screen === 'approvedPets' && <ApprovedRequests />}
             {screen === 'adoptionRequests' && <AdoptingRequests />}
             {screen === 'adoptedHistory' && <AdoptedHistory />}
+            {screen === 'tracking' && <TrackingManagement />}
           </div>
         </div>
       </div>

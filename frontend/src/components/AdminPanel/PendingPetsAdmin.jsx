@@ -1,5 +1,6 @@
+//1
 import React, { useState, useEffect, useCallback } from 'react';
-import { useAuthContext } from '../../hooks/useAuthContext';
+import { useAdminAuthContext } from '../../hooks/useAdminAuthContext';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
@@ -7,8 +8,8 @@ const PendingPetsAdmin = () => {
   const [pets, setPets] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const { user } = useAuthContext();
-  const token = user?.token || localStorage.getItem('token');
+  const { admin } = useAdminAuthContext();
+  const token = admin?.token; // ✅ FIXED: Changed from user?.token
 
   const fetchPending = useCallback(async () => {
     if (!token) {
@@ -38,16 +39,18 @@ const PendingPetsAdmin = () => {
   }, [fetchPending]);
 
   const approve = async (id) => {
-    if (!window.confirm('Approve this pet?')) return;
+    if (!window.confirm('Approve this pet for adoption?')) return;
 
     try {
       await fetch(`${API_URL}/api/admin/pets/approve/${id}`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` }
       });
+      alert('✅ Pet approved!');
       fetchPending();
     } catch (error) {
       console.error('❌ Approve failed:', error);
+      alert('Failed to approve pet');
     }
   };
 
@@ -59,9 +62,11 @@ const PendingPetsAdmin = () => {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` }
       });
+      alert('❌ Pet rejected');
       fetchPending();
     } catch (error) {
       console.error('❌ Reject failed:', error);
+      alert('Failed to reject pet');
     }
   };
 
@@ -69,6 +74,7 @@ const PendingPetsAdmin = () => {
     return (
       <div className="text-center py-5">
         <div className="spinner-border text-primary"></div>
+        <p className="mt-2">Loading...</p>
       </div>
     );
   }
@@ -77,13 +83,15 @@ const PendingPetsAdmin = () => {
     <div>
       <h4 className="mb-4">
         <i className="bi bi-hourglass-split me-2"></i>
-        Pending Pet Approvals
+        Pending Posted Pets
+        <span className="badge bg-warning ms-2">{pets.length}</span>
       </h4>
+      <p className="text-muted">Pets that users want to give up for adoption</p>
 
       {pets.length === 0 ? (
         <div className="text-center py-5">
           <i className="bi bi-inbox display-1 text-muted"></i>
-          <p>No pending pets</p>
+          <p className="mt-3">No pending pets</p>
         </div>
       ) : (
         <div className="row">
@@ -94,13 +102,23 @@ const PendingPetsAdmin = () => {
                   src={`${API_URL}/images/${pet.imagePath}`}
                   className="card-img-top"
                   alt={pet.name}
-                  style={{ height: 220, objectFit: 'cover' }}
+                  style={{ height: 250, objectFit: 'cover' }}
+                  onError={(e) => { e.target.src = 'https://via.placeholder.com/250x250?text=Pet+Image'; }}
                 />
                 <div className="card-body">
-                  <h5>{pet.name}</h5>
-                  <p><strong>Category:</strong> {pet.category}</p>
-                  <p><strong>Breed:</strong> {pet.breed}</p>
-                  <p><strong>Age:</strong> {pet.age}</p>
+                  <h5 className="card-title">{pet.name}</h5>
+                  <div className="mb-2">
+                    <span className="badge bg-primary me-2">{pet.category}</span>
+                    <span className="badge bg-secondary">{pet.breed || 'Mixed'}</span>
+                  </div>
+                  <p className="mb-1"><strong>Age:</strong> {pet.age} years</p>
+                  <p className="mb-1"><strong>Gender:</strong> {pet.gender || 'Unknown'}</p>
+                  <p className="mb-1"><strong>Location:</strong> {pet.location}</p>
+                  <p className="mb-1"><strong>Owner:</strong> {pet.email}</p>
+                  <p className="mb-2"><strong>Phone:</strong> {pet.phone}</p>
+                  {pet.description && (
+                    <p className="text-muted small mb-3">{pet.description}</p>
+                  )}
 
                   <div className="d-flex gap-2">
                     <button

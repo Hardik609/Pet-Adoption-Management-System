@@ -1,3 +1,4 @@
+//1
 import React from 'react'
 import { assets } from '../assets/assets'
 import { Link, NavLink } from 'react-router-dom'
@@ -80,9 +81,100 @@ const Navbar = (props) => {
             </div>
         </div>
     </nav>
+     )
+}
+
+export default Navbar
 
 
+// import React from 'react';
+// import { Link, useNavigate } from 'react-router-dom';
+// import { useAuthContext } from '../hooks/useAuthContext';
+// import { useLogout } from '../hooks/useLogout';
 
+// const Navbar = () => {
+//   const { user } = useAuthContext();
+//   const { logout } = useLogout();
+//   const navigate = useNavigate();
+
+//   const handleLogout = () => {
+//     logout();
+//     navigate('/');
+//   };
+
+//   return (
+//     <nav className="navbar navbar-expand-lg navbar-light bg-light sticky-top">
+//       <div className="container-fluid">
+//         <Link className="navbar-brand" to="/">
+//           🐾 Pet Adoption
+//         </Link>
+        
+//         <button
+//           className="navbar-toggler"
+//           type="button"
+//           data-bs-toggle="collapse"
+//           data-bs-target="#navbarNav"
+//         >
+//           <span className="navbar-toggler-icon"></span>
+//         </button>
+
+//         <div className="collapse navbar-collapse" id="navbarNav">
+//           <ul className="navbar-nav ms-auto">
+//             <li className="nav-item">
+//               <Link className="nav-link" to="/">Home</Link>
+//             </li>
+//             <li className="nav-item">
+//               <Link className="nav-link" to="/pets">Pets</Link>
+//             </li>
+            
+//             {user ? (
+//               <>
+//                 {user.role === 'ADMIN' ? (
+//                   <>
+//                     <li className="nav-item">
+//                       <Link className="nav-link text-danger fw-bold" to="/admin/dashboard">
+//                         <i className="bi bi-shield-check me-1"></i>
+//                         Admin Panel
+//                       </Link>
+//                     </li>
+//                     <li className="nav-item">
+//                       <span className="nav-link text-muted">
+//                         {user.name} (Admin)
+//                       </span>
+//                     </li>
+//                   </>
+//                 ) : (
+//                   <li className="nav-item">
+//                     <Link className="nav-link" to="/profile">
+//                       <i className="bi bi-person-circle me-1"></i>
+//                       {user.name}
+//                     </Link>
+//                   </li>
+//                 )}
+//                 <li className="nav-item">
+//                   <button className="btn btn-outline-danger btn-sm ms-2" onClick={handleLogout}>
+//                     Logout
+//                   </button>
+//                 </li>
+//               </>
+//             ) : (
+//               <li className="nav-item">
+//                 <Link className="btn btn-primary btn-sm ms-2" to="/auth">
+//                   Login
+//                 </Link>
+//               </li>
+//             )}
+//           </ul>
+//         </div>
+//       </div>
+//     </nav>
+//   );
+// };
+
+// export default Navbar;
+
+
+    //ye vaala code kis liye hai
 
     // <nav className="navbar navbar-expand-lg navbar-light bg-white shadow-sm py-3">
     //   <div className="container">
@@ -149,7 +241,4 @@ const Navbar = (props) => {
     //     </div>
     //   </div>
     // </nav>
-  )
-}
-
-export default Navbar
+ 

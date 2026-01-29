@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useAdminAuthContext } from '../../hooks/useAdminAuthContext'; // ✅ ADD THIS
 import {
   PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend,
   BarChart, Bar, XAxis, YAxis, CartesianGrid
@@ -15,7 +16,8 @@ const Dashboard = () => {
   const [monthlyData, setMonthlyData] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const token = localStorage.getItem('token');
+  const { admin } = useAdminAuthContext(); // ✅ ADD THIS
+  const token = admin?.token; // ✅ CHANGE THIS
   const API = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
   useEffect(() => {

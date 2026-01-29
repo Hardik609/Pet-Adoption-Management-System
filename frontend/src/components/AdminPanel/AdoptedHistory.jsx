@@ -1,18 +1,16 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import PetCard from './PetCard';
-import { useAuthContext } from '../../hooks/useAuthContext';
+import { useAdminAuthContext } from '../../hooks/useAdminAuthContext'; // ✅ FIXED
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
 const AdoptedHistory = () => {
   const [pets, setPets] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
 
-  const { user } = useAuthContext();
-  const token = user?.token || localStorage.getItem('token');
+  const { admin } = useAdminAuthContext(); // ✅ FIXED: Changed from user to admin
+  const token = admin?.token; // ✅ FIXED: Get token from admin
 
-  const fetchAdoptedPets = useCallback(async () => {
+  const fetchAdopted = useCallback(async () => {
     if (!token) {
       setLoading(false);
       return;
@@ -36,12 +34,8 @@ const AdoptedHistory = () => {
   }, [token]);
 
   useEffect(() => {
-    fetchAdoptedPets();
-  }, [fetchAdoptedPets]);
-
-  const filtered = pets.filter(p =>
-    p.name?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+    fetchAdopted();
+  }, [fetchAdopted]);
 
   if (loading) {
     return (
@@ -56,31 +50,41 @@ const AdoptedHistory = () => {
       <h4 className="mb-4">
         <i className="bi bi-clock-history me-2"></i>
         Adopted Pets History
+        <span className="badge bg-info ms-2">{pets.length}</span>
       </h4>
 
-      <input
-        className="form-control mb-3"
-        placeholder="Search by name"
-        value={searchTerm}
-        onChange={(e) => setSearchTerm(e.target.value)}
-      />
-
-      {filtered.length === 0 ? (
+      {pets.length === 0 ? (
         <div className="text-center py-5">
           <i className="bi bi-inbox display-1 text-muted"></i>
-          <p>No adopted pets found</p>
+          <p className="mt-3">No adopted pets</p>
         </div>
       ) : (
         <div className="row">
-          {filtered.map(pet => (
+          {pets.map(pet => (
             <div className="col-lg-6 mb-4" key={pet.id}>
-              <PetCard
-                pet={pet}
-                updateCards={fetchAdoptedPets}
-                adoptedView
-                showDelete
-                deleteBtnText="Delete History"
-              />
+              <div className="card shadow-sm">
+                <div className="row g-0">
+                  <div className="col-md-5">
+                    <img
+                      src={`${API_URL}/images/${pet.image_url}`}
+                      className="img-fluid rounded-start h-100"
+                      alt={pet.name}
+                      style={{ objectFit: 'cover', minHeight: 200 }}
+                      onError={(e) => { e.target.src = 'https://via.placeholder.com/250x250?text=Pet+Image'; }}
+                    />
+                  </div>
+                  <div className="col-md-7">
+                    <div className="card-body">
+                      <h5>{pet.name}</h5>
+                      <span className="badge bg-success mb-2">Adopted</span>
+                      <p className="mb-1"><strong>Category:</strong> {pet.category}</p>
+                      <p className="mb-1"><strong>Breed:</strong> {pet.breed}</p>
+                      <p className="mb-1"><strong>Age:</strong> {pet.age} years</p>
+                      <p className="mb-0"><strong>Gender:</strong> {pet.gender}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           ))}
         </div>

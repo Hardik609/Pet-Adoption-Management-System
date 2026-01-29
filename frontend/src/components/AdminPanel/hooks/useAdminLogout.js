@@ -1,7 +1,8 @@
-import { useAuthContext } from "../../../hooks/useAuthContext";
+//1
+import { useAdminAuthContext } from "../../../hooks/useAdminAuthContext";
 
 export const useAdminLogout = () => {
-    const { dispatch } = useAuthContext();
+    const { dispatch } = useAdminAuthContext();
     
     const adminLogout = () => {
         localStorage.removeItem('admin');

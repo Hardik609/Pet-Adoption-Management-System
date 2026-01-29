@@ -1,3 +1,4 @@
+//1
 package com.petadoption.entity;
 
 import jakarta.persistence.*;
@@ -5,7 +6,6 @@ import jakarta.persistence.*;
 @Entity
 @Table(name = "users")
 public class User {
-
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;

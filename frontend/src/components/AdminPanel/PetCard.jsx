@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
-import { useAuthContext } from '../../hooks/useAuthContext';
+import { useAdminAuthContext } from '../../hooks/useAdminAuthContext'; // ✅ FIXED
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080';
 
@@ -16,8 +16,8 @@ const PetCard = ({
   const [showSuccess, setShowSuccess] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const { user } = useAuthContext();
-  const token = user?.token || localStorage.getItem('token');
+  const { admin } = useAdminAuthContext(); // ✅ FIXED: Changed from user to admin
+  const token = admin?.token; // ✅ FIXED: Get token from admin
 
   const formatTimeAgo = (dateString) => {
     if (!dateString) return 'N/A';

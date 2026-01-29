@@ -1,3 +1,4 @@
+//1
 package com.petadoption.controller;
 
 import com.petadoption.entity.Admin;
@@ -162,7 +163,7 @@ public class AuthController {
 
     // ================= TEMPORARY - GENERATE HASH FOR TESTING =================
     @GetMapping("/test/hash")
-    public Map<String, String> generateHash() {
+    public Map<String, String> generateHash() { // http://localhost:8080/api/auth/test/generate-hash = after runnig the backedn go to thsi weebiste for generated hash value
 
         String password = "admin123";
         String hash = passwordEncoder.encode(password);
